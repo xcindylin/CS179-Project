@@ -1,15 +1,15 @@
 #include "board.h"
 
 /*
- * Make a standard 8x8 othello board and initialize it to the standard setup.
+ * Make a 64x64 othello board and initialize it to the standard setup.
  */
 Board::Board() {
-    taken.set(3 + 8 * 3);
-    taken.set(3 + 8 * 4);
-    taken.set(4 + 8 * 3);
-    taken.set(4 + 8 * 4);
-    black.set(4 + 8 * 3);
-    black.set(3 + 8 * 4);
+    taken.set(31 + 64 * 31);
+    taken.set(31 + 64 * 32);
+    taken.set(32 + 64 * 31);
+    taken.set(32 + 64 * 32);
+    black.set(32 + 64 * 31);
+    black.set(31 + 64 * 32);
 }
 
 /*
@@ -29,20 +29,20 @@ Board *Board::copy() {
 }
 
 bool Board::occupied(int x, int y) {
-    return taken[x + 8*y];
+    return taken[x + 64*y];
 }
 
 bool Board::get(Side side, int x, int y) {
-    return occupied(x, y) && (black[x + 8*y] == (side == BLACK));
+    return occupied(x, y) && (black[x + 64*y] == (side == BLACK));
 }
 
 void Board::set(Side side, int x, int y) {
-    taken.set(x + 8*y);
-    black.set(x + 8*y, side == BLACK);
+    taken.set(x + 64*y);
+    black.set(x + 64*y, side == BLACK);
 }
 
 bool Board::onBoard(int x, int y) {
-    return(0 <= x && x < 8 && 0 <= y && y < 8);
+    return(0 <= x && x < 64 && 0 <= y && y < 64);
 }
 
  
@@ -58,8 +58,8 @@ bool Board::isDone() {
  * Returns true if there are legal moves for the given side.
  */
 bool Board::hasMoves(Side side) {
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
+    for (int i = 0; i < 64; i++) {
+        for (int j = 0; j < 64; j++) {
             Move move(i, j);
             if (checkMove(&move, side)) return true;
         }

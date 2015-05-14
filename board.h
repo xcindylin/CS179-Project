@@ -8,8 +8,8 @@ using namespace std;
 class Board {
    
 private:
-    bitset<64> black;
-    bitset<64> taken;    
+    bitset<4096> black;
+    bitset<4096> taken;    
        
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
