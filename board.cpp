@@ -67,6 +67,18 @@ bool Board::hasMoves(Side side) {
     return false;
 }
 
+// Returns a list of possible moves for the specified side
+vector<Move> Board::getMoves(Side side) {
+    vector<Move> movesList;
+    for (int i = 0; i < 64; i++) {
+        for (int j = 0; j < 64; j++) {
+            Move move(i, j);
+            if (checkMove(&move, side)) movesList.push_back(move);
+        }
+    }
+    return movesList;
+}
+
 /*
  * Returns true if a move is legal for the given side; false otherwise.
  */
