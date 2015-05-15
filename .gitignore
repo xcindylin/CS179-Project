@@ -1,0 +1,3 @@
+*.o
+player
+.DS_Store
