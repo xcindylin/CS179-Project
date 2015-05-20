@@ -2,7 +2,7 @@
 
 DecisionTree::DecisionTree(Board *board, Side maximizer) {
     // this is our side
-	this->maximizer = maximizer;
+    this->maximizer = maximizer;
     root = new Node(NULL, maximizer == BLACK ? WHITE : BLACK, maximizer, board);
 }
 

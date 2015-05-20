@@ -10,14 +10,13 @@ Player::Player(Side side) {
 Player::~Player() {
 }
 
-
 Move *Player::doMove(Move *opponentsMove) {
     board->doMove(opponentsMove, otherSide);
     if (!board->hasMoves(side)) {
         return NULL;
     }
     DecisionTree *tree = new DecisionTree(board, side);
-    Move *moveToMake = tree->findBestMove(3);
+    Move *moveToMake = tree->findBestMove(4);
     board->doMove(moveToMake, side);
     return moveToMake;
 }

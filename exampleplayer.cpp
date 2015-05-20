@@ -21,6 +21,6 @@ Move *ExamplePlayer::doMove(Move *opponentsMove) {
     int i = moves.size() > 10 ? 10 : 0;
     Move *move = new Move(moves[i].getX(), moves[i].getY());
     board->doMove(move, side);
-    return &(moves[i]);
+    return move;
 }
     

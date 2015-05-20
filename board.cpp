@@ -1,15 +1,15 @@
 #include "board.h"
 
 /*
- * Make a 64x64 othello board and initialize it to the standard setup.
+ * Make a 16x16 othello board and initialize it to the standard setup.
  */
 Board::Board() {
-    taken.set(31 + 64 * 31);
-    taken.set(31 + 64 * 32);
-    taken.set(32 + 64 * 31);
-    taken.set(32 + 64 * 32);
-    black.set(32 + 64 * 31);
-    black.set(31 + 64 * 32);
+    taken.set(7 + 16 * 7);
+    taken.set(7 + 16 * 8);
+    taken.set(8 + 16 * 7);
+    taken.set(8 + 16 * 8);
+    black.set(8 + 16 * 7);
+    black.set(7 + 16 * 8);
 }
 
 /*
@@ -29,20 +29,20 @@ Board *Board::copy() {
 }
 
 bool Board::occupied(int x, int y) {
-    return taken[x + 64*y];
+    return taken[x + 16*y];
 }
 
 bool Board::get(Side side, int x, int y) {
-    return occupied(x, y) && (black[x + 64*y] == (side == BLACK));
+    return occupied(x, y) && (black[x + 16*y] == (side == BLACK));
 }
 
 void Board::set(Side side, int x, int y) {
-    taken.set(x + 64*y);
-    black.set(x + 64*y, side == BLACK);
+    taken.set(x + 16*y);
+    black.set(x + 16*y, side == BLACK);
 }
 
 bool Board::onBoard(int x, int y) {
-    return(0 <= x && x < 64 && 0 <= y && y < 64);
+    return(0 <= x && x < 16 && 0 <= y && y < 16);
 }
 
  
@@ -58,8 +58,8 @@ bool Board::isDone() {
  * Returns true if there are legal moves for the given side.
  */
 bool Board::hasMoves(Side side) {
-    for (int i = 0; i < 64; i++) {
-        for (int j = 0; j < 64; j++) {
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
             Move move(i, j);
             if (checkMove(&move, side)) return true;
         }
@@ -70,8 +70,8 @@ bool Board::hasMoves(Side side) {
 // Returns a list of possible moves for the specified side
 vector<Move> Board::getMoves(Side side) {
     vector<Move> movesList;
-    for (int i = 0; i < 64; i++) {
-        for (int j = 0; j < 64; j++) {
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
             Move move(i, j);
             if (checkMove(&move, side)) movesList.push_back(move);
         }
