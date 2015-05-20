@@ -34,7 +34,7 @@ ExamplePlayer::~ExamplePlayer() {
  * Important: doMove must take no longer than the timeout passed in 
  * msLeft, or your AI will lose! The move returned must also be legal.
  */
-Move *ExamplePlayer::doMove(Move *opponentsMove, int msLeft) {
+Move *ExamplePlayer::doMove(Move *opponentsMove) {
     /* 
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move

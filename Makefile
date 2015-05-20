@@ -3,13 +3,14 @@ CFLAGS      = -Wall -ansi -pedantic -ggdb
 OBJS        = exampleplayer.o wrapper.o board.o
 PLAYERNAME  = player
 
-all: $(PLAYERNAME)
+all: $(PLAYERNAME) testgame
 	
 $(PLAYERNAME): $(OBJS)
 	$(CC) -o $@ $^
         
-side.o: 
-
+testgame: testgame.o board.o exampleplayer.o
+	$(CC) -o $@ $^
+        
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -x c++ $< -o $@
 	
@@ -20,6 +21,6 @@ cleanjava:
 	make -C java/ clean
 
 clean:
-	rm -f *.o $(PLAYERNAME)	
+	rm -f *.o $(PLAYERNAME) testgame		
 	
 .PHONY: java

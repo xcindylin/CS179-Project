@@ -12,7 +12,7 @@ public:
     ExamplePlayer(Side side);
     ~ExamplePlayer();
     
-    Move *doMove(Move *opponentsMove, int msLeft);
+    Move *doMove(Move *opponentsMove);
 };
 
 #endif
