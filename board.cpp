@@ -173,3 +173,11 @@ int Board::countBlack() {
 int Board::countWhite() {
     return taken.count() - black.count();
 }
+
+/* 
+ * Return the score of this board state for the maximizer.
+ */
+ float Board::getScore(Side maximizer) {
+    // TODO
+    return 0;
+ }

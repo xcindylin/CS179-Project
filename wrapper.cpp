@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         }
         
         // Get player's move and output to java wrapper.
-        Move *playersMove = player->doMove(opponentsMove, msLeft);                        
+        Move *playersMove = player->doMove(opponentsMove);                        
         if (playersMove != NULL) {                  
             cout << playersMove->x << " " << playersMove->y << endl;
         } else {

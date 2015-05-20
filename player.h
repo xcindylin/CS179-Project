@@ -1,12 +1,11 @@
-#ifndef __EXAMPLEPLAYER_H__
-#define __EXAMPLEPLAYER_H__
+#ifndef __PLAYER_H__
+#define __PLAYER_H__
 
-#include <iostream>
 #include "common.h"
 #include "board.h"
 using namespace std;
 
-class ExamplePlayer {
+class Player {
 
 private:
 	Side side;
@@ -14,8 +13,8 @@ private:
 	Board *board;
 
 public:
-    ExamplePlayer(Side side);
-    ~ExamplePlayer();
+    Player(Side side);
+    ~Player();
     
     Move *doMove(Move *opponentsMove);
 };

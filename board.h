@@ -31,6 +31,7 @@ public:
     int count(Side side);
     int countBlack();
     int countWhite();
+    float getScore(Side maximizer);
 };
 
 #endif
