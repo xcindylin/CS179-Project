@@ -12,7 +12,6 @@ ExamplePlayer::ExamplePlayer(Side side) {
 ExamplePlayer::~ExamplePlayer() {
 }
 
-
 Move *ExamplePlayer::doMove(Move *opponentsMove) {
     board->doMove(opponentsMove, otherSide);
     vector<Move> moves = board->getMoves(side);

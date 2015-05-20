@@ -1,3 +1,4 @@
 *.o
 player
+testgame
 .DS_Store
