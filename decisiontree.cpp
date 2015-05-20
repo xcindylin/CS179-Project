@@ -15,7 +15,7 @@ Move *DecisionTree::findBestMove(int depth) {
     // find the actual best move
     vector<Node *> children = root->getChildren();
     Node *best = children[0];
-    for (int i = 1; i < children.size(); i++) {
+    for(int i = 1; i < children.size(); i++) {
         if (children[i]->getBeta() > best->getBeta()) {
             best = children[i];
         }
@@ -29,14 +29,15 @@ void DecisionTree::search(Node *startingNode, int depth) {
         startingNode->setBeta(startingNode->getScore());
         return;
     }
+    Board *board = startingNode->getBoard();
     Side oppositeSide = startingNode->getSide() == BLACK ? WHITE : BLACK;
     vector<Move> moves = board->getMoves(oppositeSide);
     for (int i = 0; i < moves.size(); i++) {
         // create the next child
-        Move move = moves[i];
+        Move *move = new Move(moves[i].getX(), moves[i].getY());
         Board *newBoard = board->copy();
-        newBoard->doMove(&move, oppositeSide);
-        Node *child = new Node(&move, oppositeSide, maximizer, newBoard);
+        newBoard->doMove(move, oppositeSide);
+        Node *child = new Node(move, oppositeSide, maximizer, newBoard);
 
         // pass alpha and beta values down
         child->setAlpha(startingNode->getAlpha());

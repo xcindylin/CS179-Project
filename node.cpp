@@ -5,7 +5,7 @@ Node::Node(Move *move, Side side, Side maximizer, Board *board) {
 	this->side = side;
 	this->maximizer = maximizer;
 	this->board = board;
-	this->score = board.getScore(maximizer);
+	this->score = board->getScore(maximizer);
 	this->alpha = -INFINITY;
 	this->beta = INFINITY;
 }
@@ -20,6 +20,10 @@ Board *Node::getBoard() {
 
 Move *Node::getMove() {
 	return move;
+}
+
+Side Node::getSide() {
+    return side;
 }
 
 Node *Node::getParent() {
@@ -56,5 +60,5 @@ void Node::setBeta(double beta) {
 
 void Node::addChild(Node *node) {
 	children.push_back(node);
-	node.setParent(this);
+	node->setParent(this);
 }

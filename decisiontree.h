@@ -1,6 +1,7 @@
 #ifndef __DECISIONTREE_H__
 #define __DECISIONTREE_H__
 
+#include <iostream>
 #include "common.h"
 #include "board.h"
 #include "node.h"

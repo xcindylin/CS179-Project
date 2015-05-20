@@ -179,5 +179,11 @@ int Board::countWhite() {
  */
  float Board::getScore(Side maximizer) {
     // TODO
-    return 0;
+    float score;
+    if (maximizer == BLACK) {
+        score = countBlack() - countWhite();
+    } else {
+        score = countWhite() - countBlack();
+    }
+    return score;
  }

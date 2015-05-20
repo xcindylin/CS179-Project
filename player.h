@@ -1,8 +1,10 @@
 #ifndef __PLAYER_H__
 #define __PLAYER_H__
 
+#include <iostream>
 #include "common.h"
 #include "board.h"
+#include "decisiontree.h"
 using namespace std;
 
 class Player {

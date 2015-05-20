@@ -21,4 +21,3 @@ Move *Player::doMove(Move *opponentsMove) {
     board->doMove(moveToMake, side);
     return moveToMake;
 }
-    

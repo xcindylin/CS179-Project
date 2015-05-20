@@ -7,34 +7,29 @@
 #include "common.h"
 #include "board.h"
 #include "exampleplayer.h"
+#include "player.h"
 
 using namespace std;
 
-Move *getMove(Side turn, Move *lastMove) {
-	if (turn == BLACK) {
-		ExamplePlayer *p = new ExamplePlayer(BLACK);
-		return p->doMove(lastMove);
-	}
-	else {
-		ExamplePlayer *p = new ExamplePlayer(WHITE);	
-		return p->doMove(lastMove);	
-	}
-}
-
 int main() {
 	Board *board = new Board();
-	// ExamplePlayer player1 = new ExamplePlayer(BLACK);
-	// ExamplePlayer player2 = new ExamplePlayer(WHITE);
+	ExamplePlayer *player1 = new ExamplePlayer(BLACK);
+	Player *player2 = new Player(WHITE);
 
     Side turn = BLACK;
     Move *m = NULL;
 
     while (!board->isDone()) {
     	// get the current player's move
-    	m = getMove(turn, m);
+        if (turn == BLACK) {
+            m = player1->doMove(m);
+        }
+        else {  
+            m = player2->doMove(m);   
+        }
 
     	if (!board->checkMove(m, turn)) {
-    		cout << "Illegal move made" << endl;
+    		cout << "Illegal move made: " << turn << " address: " << m << endl;
     	}
 
     	// make move once it is determiend to be legal
