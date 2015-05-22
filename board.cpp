@@ -1,15 +1,21 @@
 #include "board.h"
 
 /*
- * Make a 16x16 othello board and initialize it to the standard setup.
+ * Make a BOARD_SIZExBOARD_SIZE othello board and initialize it to the standard setup.
  */
 Board::Board() {
-    taken.set(7 + 16 * 7);
-    taken.set(7 + 16 * 8);
-    taken.set(8 + 16 * 7);
-    taken.set(8 + 16 * 8);
-    black.set(8 + 16 * 7);
-    black.set(7 + 16 * 8);
+    // taken.set(7 + BOARD_SIZE * 7);
+    taken.set((BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2 - 1));
+    // taken.set(7 + BOARD_SIZE * 8);
+    taken.set((BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2));
+    // taken.set(8 + BOARD_SIZE * 7);
+    taken.set((BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1));
+    // taken.set(8 + BOARD_SIZE * 8);
+    taken.set((BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2));
+    // black.set(8 + BOARD_SIZE * 7);
+    black.set((BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1));
+    // black.set(7 + BOARD_SIZE * 8);
+    black.set((BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2));
 }
 
 /*
@@ -29,20 +35,20 @@ Board *Board::copy() {
 }
 
 bool Board::occupied(int x, int y) {
-    return taken[x + 16*y];
+    return taken[x + BOARD_SIZE*y];
 }
 
 bool Board::get(Side side, int x, int y) {
-    return occupied(x, y) && (black[x + 16*y] == (side == BLACK));
+    return occupied(x, y) && (black[x + BOARD_SIZE*y] == (side == BLACK));
 }
 
 void Board::set(Side side, int x, int y) {
-    taken.set(x + 16*y);
-    black.set(x + 16*y, side == BLACK);
+    taken.set(x + BOARD_SIZE*y);
+    black.set(x + BOARD_SIZE*y, side == BLACK);
 }
 
 bool Board::onBoard(int x, int y) {
-    return(0 <= x && x < 16 && 0 <= y && y < 16);
+    return(0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE);
 }
 
  
@@ -58,8 +64,8 @@ bool Board::isDone() {
  * Returns true if there are legal moves for the given side.
  */
 bool Board::hasMoves(Side side) {
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
             Move move(i, j);
             if (checkMove(&move, side)) return true;
         }
@@ -70,8 +76,8 @@ bool Board::hasMoves(Side side) {
 // Returns a list of possible moves for the specified side
 vector<Move> Board::getMoves(Side side) {
     vector<Move> movesList;
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
             Move move(i, j);
             if (checkMove(&move, side)) movesList.push_back(move);
         }
@@ -177,13 +183,122 @@ int Board::countWhite() {
 /* 
  * Return the score of this board state for the maximizer.
  */
- float Board::getScore(Side maximizer) {
-    // TODO
+float Board::getScore(Side maximizer) {
+    Side minimizer = maximizer == BLACK ? WHITE : BLACK;
     float score;
+
     if (maximizer == BLACK) {
         score = countBlack() - countWhite();
     } else {
         score = countWhite() - countBlack();
     }
+
+    // update score by adding a positive weight if the maximizer has occupied a
+    // corner or a negative weight if the minimizer has occupied a corner
+    bool maxULCorner = get(maximizer, 0, 0);
+    bool maxURCorner = get(maximizer, BOARD_SIZE-1, 0);
+    bool maxLLCorner = get(maximizer, 0, BOARD_SIZE-1);
+    bool maxLRCorner = get(maximizer, BOARD_SIZE-1, BOARD_SIZE-1);
+
+    bool minULCorner = get(minimizer, 0, 0);
+    bool minURCorner = get(minimizer, BOARD_SIZE-1, 0);
+    bool minLLCorner = get(minimizer, 0, BOARD_SIZE-1);
+    bool minLRCorner = get(minimizer, BOARD_SIZE-1, BOARD_SIZE-1);
+
+    if (maxULCorner || maxURCorner || maxLLCorner || maxLRCorner) {
+        score += CORNER_WEIGHT * (boolToInt(maxULCorner) + boolToInt(maxURCorner) 
+                                + boolToInt(maxLLCorner) + boolToInt(maxLRCorner));
+    }
+    if (minULCorner || minURCorner || minLLCorner || minLRCorner) {
+        score -= CORNER_WEIGHT * (boolToInt(minULCorner) + boolToInt(minURCorner) 
+                                + boolToInt(minLLCorner) + boolToInt(minLRCorner));
+    }
+
+    // update score using a negative weight for positions in the diagonal that are
+    // next to unoccupied corners
+    bool maxULDiagonal = get(maximizer, 1, 1);
+    bool maxURDiagonal = get(maximizer, BOARD_SIZE-2, 1);
+    bool maxLLDiagonal = get(maximizer, 1, BOARD_SIZE-2);
+    bool maxLRDiagonal = get(maximizer, BOARD_SIZE-2, BOARD_SIZE-2);
+
+    if (maxULDiagonal && !minULCorner) {
+        score += DIAGONAL_WEIGHT;
+    }
+    if (maxURDiagonal && !minURCorner) {
+        score += DIAGONAL_WEIGHT;
+    }
+    if (maxLLDiagonal && !minLLCorner) {
+        score += DIAGONAL_WEIGHT;
+    }
+    if (maxLRDiagonal && !minLRCorner) {
+        score += DIAGONAL_WEIGHT;
+    }
+
+    // update score using a positive weight for occupied edge positions (edge
+    // positions do not include the corners)
+    for (int x = 0; x < BOARD_SIZE; x += BOARD_SIZE-1) {
+        for (int y = 1; y < BOARD_SIZE-1; y++) {
+            score += EDGE_WEIGHT * boolToInt(get(maximizer, x, y));
+        }
+    }
+    for (int y = 0; y < BOARD_SIZE; y += BOARD_SIZE-1) {
+        for (int x = 1; x < BOARD_SIZE-1; x++) {
+            score += EDGE_WEIGHT * boolToInt(get(maximizer, x, y));
+        }
+    }
+
+    score += MOVES_WEIGHT * getMovesScore(maximizer);
+    score += FRONTIER_WEIGHT * getFrontierScore(maximizer);
+
     return score;
  }
+
+// new functions
+ int Board::boolToInt(bool b) {
+    return b ? 1 : 0;
+ }
+
+int Board::getMovesScore(Side maximizer) {
+    Side minimizer = maximizer == BLACK ? WHITE : BLACK;
+    vector<Move> opponentMoves = getMoves(minimizer);
+    return -opponentMoves.size();
+}
+
+int Board::getFrontierScore(Side maximizer) {
+    int score = 0;
+    bool frontier;
+
+    for (int x = 1; x < BOARD_SIZE-1; x++) {
+        for (int y = 1; y < BOARD_SIZE-1; y++) {
+            // check to see if position on the board is occupied by
+            // either the maximizer or minimizer
+            if (occupied(x, y)) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        // continue since it's the current position
+                        // being checked
+                        if (dx == 0 && dy == 0) {
+                            continue;
+                        }
+                        // set flag since we have found an unoccupied
+                        // position surrounding the current position
+                        if (!occupied(x+dx, y+dy)) {
+                            frontier = true;
+                        }
+                    }
+                }
+                // add to the score if maximizer is in the frontier
+                if (get(maximizer, x, y)) {
+                    score++;
+                }
+                // subtract from the score if the minimizer is in
+                // the frontier
+                else {
+                    score--;
+                }
+            }
+            frontier = false;
+        }
+    }
+    return score;
+}
