@@ -10,33 +10,64 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
     }
     DeviceBoard *board = node->getBoard();
     Side oppositeSide = side == BLACK ? WHITE : BLACK;
-    thrust::device_vector<Move> moves = board->getMoves(oppositeSide);
-    for (int i = 0; i < moves.size(); i++) {
-        // create the next child
-        Move *move = new Move(moves[i].getX(), moves[i].getY());
-        DeviceBoard *newBoard = board->copy();
-        newBoard->doMove(move, oppositeSide);
-        DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
 
-        // pass alpha and beta values down
-        child->setAlpha(node->getAlpha());
-        child->setBeta(node->getBeta());
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            Move *move = new Move(i, j);
+            if (checkMove(&move, side)) {
+                DeviceBoard *newBoard = board->copy();
+                newBoard->doMove(move, oppositeSide);
+                DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
 
-        // search child
-        cudaSearch(child, oppositeSide, maximizer, depth - 1);
+                // pass alpha and beta values down
+                child->setAlpha(node->getAlpha());
+                child->setBeta(node->getBeta());
 
-        if (side == maximizer) {
-            node->setBeta(min(node->getBeta(), child->getAlpha()));
-        } else {
-            node->setAlpha(max(node->getAlpha(), child->getBeta()));
-        }
+                // search child
+                cudaSearch(child, oppositeSide, maximizer, depth - 1);
 
-        delete child;
+                if (side == maximizer) {
+                    node->setBeta(min(node->getBeta(), child->getAlpha()));
+                } else {
+                    node->setAlpha(max(node->getAlpha(), child->getBeta()));
+                }
 
-        if (node->getAlpha() >= node->getBeta()) {
-            return;
+                delete child;
+
+                if (node->getAlpha() >= node->getBeta()) {
+                    return;
+                }
+            }
         }
     }
+
+    // thrust::device_vector<Move> moves = board->getMoves(oppositeSide);
+    // for (int i = 0; i < moves.size(); i++) {
+    //     // create the next child
+    //     Move *move = new Move(moves[i].getX(), moves[i].getY());
+    //     DeviceBoard *newBoard = board->copy();
+    //     newBoard->doMove(move, oppositeSide);
+    //     DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
+
+    //     // pass alpha and beta values down
+    //     child->setAlpha(node->getAlpha());
+    //     child->setBeta(node->getBeta());
+
+    //     // search child
+    //     cudaSearch(child, oppositeSide, maximizer, depth - 1);
+
+    //     if (side == maximizer) {
+    //         node->setBeta(min(node->getBeta(), child->getAlpha()));
+    //     } else {
+    //         node->setAlpha(max(node->getAlpha(), child->getBeta()));
+    //     }
+
+    //     delete child;
+
+    //     if (node->getAlpha() >= node->getBeta()) {
+    //         return;
+    //     }
+    // }
 }
 
 __global__

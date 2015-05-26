@@ -1,6 +1,6 @@
 CC          = g++
 CFLAGS      = -Wall -ansi -pedantic -ggdb
-OBJS        = testgame.o board.o deviceboard.o exampleplayer.o player.o gpuplayer.o decisiontree.o paralleldecisiontree.o node.o
+OBJS        = testgame.o board.o deviceboard.o exampleplayer.o player.o gpuplayer.o decisiontree.o paralleldecisiontree.o node.o devicenode.o
 
 all: testgame
         

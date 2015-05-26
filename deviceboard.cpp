@@ -86,17 +86,30 @@ bool DeviceBoard::hasMoves(Side side) {
     return false;
 }
 
-__device__
-thrust::device_vector<Move> DeviceBoard::getMoves(Side side) {
+// __device__
+// thrust::device_vector<Move> DeviceBoard::getMoves(Side side) {
+//     // find moves on the GPU
+//     thrust::device_vector<Move> movesList;
+//     for (int i = 0; i < BOARD_SIZE; i++) {
+//         for (int j = 0; j < BOARD_SIZE; j++) {
+//             Move move(i, j);
+//             if (checkMove(&move, side)) movesList.push_back(move);
+//         }
+//     }
+//     return movesList;
+// }
+
+CUDA_CALLABLE_MEMBER
+int DeviceBoard::countMoves(Side side) {
     // find moves on the GPU
-    thrust::device_vector<Move> movesList;
+    int count;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             Move move(i, j);
-            if (checkMove(&move, side)) movesList.push_back(move);
+            if (checkMove(&move, side)) count++;
         }
     }
-    return movesList;
+    return count;
 }
 
 /*
@@ -291,9 +304,9 @@ int DeviceBoard::getScore(Side maximizer) {
 CUDA_CALLABLE_MEMBER
 int DeviceBoard::getMovesScore(Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
-    vector<Move> moves = getMoves(maximizer);
-    vector<Move> opponentMoves = getMoves(minimizer);
-    return moves.size()-opponentMoves.size();
+    int maximizerCount = countMoves(maximizer);
+    int minimizerCount = countMoves(minimizer);
+    return maximizerCount - minimizerCount;
 }
 
 CUDA_CALLABLE_MEMBER
