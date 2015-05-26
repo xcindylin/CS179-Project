@@ -1,9 +1,10 @@
-#include "board.h"
+#include "deviceboard.h"
 
 /*
  * Make a BOARD_SIZExBOARD_SIZE othello board and initialize it to the standard setup.
  */
-Board::Board() {
+CUDA_CALLABLE_MEMBER
+DeviceBoard::DeviceBoard() {
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
         taken[i] = 0;
         black[i] = 0;
@@ -25,36 +26,42 @@ Board::Board() {
 /*
  * Destructor for the board.
  */
-Board::~Board() {
+CUDA_CALLABLE_MEMBER
+DeviceBoard::~DeviceBoard() {
 }
 
 /*
  * Returns a copy of this board.
  */
-Board *Board::copy() {
-    Board *newBoard = new Board();
+CUDA_CALLABLE_MEMBER
+DeviceBoard *DeviceBoard::copy() {
+    DeviceBoard *newDeviceBoard = new DeviceBoard();
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-        newBoard->black[i] = black[i];
-        newBoard->taken[i] = taken[i];
+        newDeviceBoard->black[i] = black[i];
+        newDeviceBoard->taken[i] = taken[i];
     }
-    return newBoard;
+    return newDeviceBoard;
 }
 
-bool Board::occupied(int x, int y) {
+CUDA_CALLABLE_MEMBER
+bool DeviceBoard::occupied(int x, int y) {
     return taken[x + BOARD_SIZE*y];
 }
 
-bool Board::get(Side side, int x, int y) {
+CUDA_CALLABLE_MEMBER
+bool DeviceBoard::get(Side side, int x, int y) {
     return occupied(x, y) && (black[x + BOARD_SIZE*y] == boolToInt(side == BLACK));
 }
 
-void Board::set(Side side, int x, int y) {
+CUDA_CALLABLE_MEMBER
+void DeviceBoard::set(Side side, int x, int y) {
     taken[x + BOARD_SIZE*y] = 1;
     // if side is black, side == BLACK will evaluate to 1
     black[x + BOARD_SIZE*y] = boolToInt(side == BLACK);
 }
 
-bool Board::onBoard(int x, int y) {
+CUDA_CALLABLE_MEMBER
+bool DeviceBoard::onDeviceBoard(int x, int y) {
     return(0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE);
 }
 
@@ -63,14 +70,16 @@ bool Board::onBoard(int x, int y) {
  * Returns true if the game is finished; false otherwise. The game is finished 
  * if neither side has a legal move.
  */
-bool Board::isDone() {
+CUDA_CALLABLE_MEMBER
+bool DeviceBoard::isDone() {
     return !(hasMoves(BLACK) || hasMoves(WHITE));
 }
 
 /*
  * Returns true if there are legal moves for the given side.
  */
-bool Board::hasMoves(Side side) {
+CUDA_CALLABLE_MEMBER
+bool DeviceBoard::hasMoves(Side side) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             Move move(i,j);
@@ -80,9 +89,10 @@ bool Board::hasMoves(Side side) {
     return false;
 }
 
-// Returns a list of possible moves for the specified side
-vector<Move> Board::getMoves(Side side) {
-    vector<Move> movesList;
+__device__
+thrust::device_vector<Move> DeviceBoard::getMoves(Side side) {
+    // find moves on the GPU
+    thrust::device_vector<Move> movesList;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             Move move(i, j);
@@ -95,7 +105,8 @@ vector<Move> Board::getMoves(Side side) {
 /*
  * Returns true if a move is legal for the given side; false otherwise.
  */
-bool Board::checkMove(Move *m, Side side) {
+CUDA_CALLABLE_MEMBER
+bool DeviceBoard::checkMove(Move *m, Side side) {
     // Passing is only legal if you have no moves.
     if (m == NULL) return !hasMoves(side);
 
@@ -113,13 +124,13 @@ bool Board::checkMove(Move *m, Side side) {
             // Is there a capture in that direction?
             int x = X + dx;
             int y = Y + dy;
-            if (onBoard(x, y) && get(other, x, y)) {
+            if (onDeviceBoard(x, y) && get(other, x, y)) {
                 do {
                     x += dx;
                     y += dy;
-                } while (onBoard(x, y) && get(other, x, y));
+                } while (onDeviceBoard(x, y) && get(other, x, y));
 
-                if (onBoard(x, y) && get(side, x, y)) return true;
+                if (onDeviceBoard(x, y) && get(side, x, y)) return true;
             }
         }
     }
@@ -129,7 +140,8 @@ bool Board::checkMove(Move *m, Side side) {
 /*
  * Modifies the board to reflect the specified move.
  */
-void Board::doMove(Move *m, Side side) {
+CUDA_CALLABLE_MEMBER
+void DeviceBoard::doMove(Move *m, Side side) {
     // A NULL move means pass.
     if (m == NULL) return;
 
@@ -148,14 +160,14 @@ void Board::doMove(Move *m, Side side) {
             do {
                 x += dx;
                 y += dy;
-            } while (onBoard(x, y) && get(other, x, y));
+            } while (onDeviceBoard(x, y) && get(other, x, y));
 
-            if (onBoard(x, y) && get(side, x, y)) {
+            if (onDeviceBoard(x, y) && get(side, x, y)) {
                 x = X;
                 y = Y;
                 x += dx;
                 y += dy;
-                while (onBoard(x, y) && get(other, x, y)) {
+                while (onDeviceBoard(x, y) && get(other, x, y)) {
                     set(side, x, y);
                     x += dx;
                     y += dy;
@@ -169,14 +181,16 @@ void Board::doMove(Move *m, Side side) {
 /*
  * Current count of given side's stones.
  */
-int Board::count(Side side) {
+CUDA_CALLABLE_MEMBER
+int DeviceBoard::count(Side side) {
     return (side == BLACK) ? countBlack() : countWhite();
 }
 
 /*
  * Current count of black stones.
  */
-int Board::countBlack() {
+CUDA_CALLABLE_MEMBER
+int DeviceBoard::countBlack() {
     int count = 0;
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
         count += black[i];
@@ -187,7 +201,8 @@ int Board::countBlack() {
 /*
  * Current count of white stones.
  */
-int Board::countWhite() {
+CUDA_CALLABLE_MEMBER
+int DeviceBoard::countWhite() {
     int count = 0;
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
         count += taken[i];
@@ -199,7 +214,8 @@ int Board::countWhite() {
 /* 
  * Return the score of this board state for the maximizer.
  */
-int Board::getScore(Side maximizer) {
+CUDA_CALLABLE_MEMBER
+int DeviceBoard::getScore(Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
     float score;
 
@@ -270,19 +286,20 @@ int Board::getScore(Side maximizer) {
  }
 
 // new functions
-
- int Board::boolToInt(bool b) {
+ CUDA_CALLABLE_MEMBER
+ int DeviceBoard::boolToInt(bool b) {
     return b ? 1 : 0;
  }
 
-int Board::getMovesScore(Side maximizer) {
+int DeviceBoard::getMovesScore(Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
     vector<Move> moves = getMoves(maximizer);
     vector<Move> opponentMoves = getMoves(minimizer);
     return moves.size()-opponentMoves.size();
 }
 
-int Board::getFrontierScore(Side maximizer) {
+CUDA_CALLABLE_MEMBER
+int DeviceBoard::getFrontierScore(Side maximizer) {
     int score = 0;
     bool frontier;
 

@@ -1,13 +1,14 @@
 CC          = g++
 CFLAGS      = -Wall -ansi -pedantic -ggdb
+OBJS        = testgame.o board.o deviceboard.o exampleplayer.o player.o gpuplayer.o decisiontree.o paralleldecisiontree.o node.o
 
 all: testgame
         
-testgame: testgame.o board.o exampleplayer.o player.o decisiontree.o node.o
-	$(CC) -o $@ $^
+testgame: $(OBJS)
+	nvcc -arch=sm_20 $(OBJS) -o testgame
         
-%.o: %.cpp
-	$(CC) -c $(CFLAGS) -x c++ $< -o $@
+%.o: %.cpp tree_cuda.cu
+	nvcc -x cu -arch=sm_20 -I. -dc $< -o $@
 
 clean:
 	rm -f *.o testgame		

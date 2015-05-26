@@ -1,14 +1,6 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
-/* from http://stackoverflow.com/questions/6978643/cuda-and-classes */
-#ifdef __CUDACC__
-#define CUDA_CALLABLE_MEMBER __host__ __device__
-#include <thrust/device_vector.h>
-#else
-#define CUDA_CALLABLE_MEMBER
-#endif
-
 #include "common.h"
 #include <vector>
 
@@ -28,31 +20,30 @@ private:
     char black[BOARD_SIZE * BOARD_SIZE];
     char taken[BOARD_SIZE * BOARD_SIZE];    
        
-    CUDA_CALLABLE_MEMBER bool occupied(int x, int y);
-    CUDA_CALLABLE_MEMBER bool get(Side side, int x, int y);
-    CUDA_CALLABLE_MEMBER void set(Side side, int x, int y);
-    CUDA_CALLABLE_MEMBER bool onBoard(int x, int y);
+    bool occupied(int x, int y);
+    bool get(Side side, int x, int y);
+    void set(Side side, int x, int y);
+    bool onBoard(int x, int y);
       
 public:
-    CUDA_CALLABLE_MEMBER Board();
-    CUDA_CALLABLE_MEMBER ~Board();
-    CUDA_CALLABLE_MEMBER Board *copy();
+    Board();
+    ~Board();
+    Board *copy();
         
-    CUDA_CALLABLE_MEMBER bool isDone();
-    CUDA_CALLABLE_MEMBER bool hasMoves(Side side);
-    CUDA_CALLABLE_MEMBER bool checkMove(Move *m, Side side);
+    bool isDone();
+    bool hasMoves(Side side);
+    bool checkMove(Move *m, Side side);
     vector<Move> getMoves(Side side);
-    __device__ thrust::device_vector<Move> getMoves(Side side);
-    CUDA_CALLABLE_MEMBER void doMove(Move *m, Side side);
-    CUDA_CALLABLE_MEMBER int count(Side side);
-    CUDA_CALLABLE_MEMBER int countBlack();
-    CUDA_CALLABLE_MEMBER int countWhite();
-    CUDA_CALLABLE_MEMBER int getScore(Side maximizer);
+    void doMove(Move *m, Side side);
+    int count(Side side);
+    int countBlack();
+    int countWhite();
+    int getScore(Side maximizer);
 
     // new functions
-    CUDA_CALLABLE_MEMBER int boolToInt(bool b);
-    CUDA_CALLABLE_MEMBER int getMovesScore(Side maximizer);
-    CUDA_CALLABLE_MEMBER int getFrontierScore(Side maximizer);
+    int boolToInt(bool b);
+    int getMovesScore(Side maximizer);
+    int getFrontierScore(Side maximizer);
 };
 
 #endif

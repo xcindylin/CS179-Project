@@ -2,21 +2,21 @@
 #include "tree_cuda.cuh"
 
 __device__ 
-void cudaSearch(Node *node, Side side, Side maximizer, int depth) {
+void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
     if (depth == 0) {
        node->setAlpha(node->getScore());
        node->setBeta(node->getScore());
        return;
     }
-    Board *board = node->getBoard();
+    DeviceBoard *board = node->getBoard();
     Side oppositeSide = side == BLACK ? WHITE : BLACK;
     thrust::device_vector<Move> moves = board->getMoves(oppositeSide);
     for (int i = 0; i < moves.size(); i++) {
         // create the next child
         Move *move = new Move(moves[i].getX(), moves[i].getY());
-        Board *newBoard = board->copy();
+        DeviceBoard *newBoard = board->copy();
         newBoard->doMove(move, oppositeSide);
-        Node *child = new Node(move, oppositeSide, maximizer, newBoard);
+        DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
 
         // pass alpha and beta values down
         child->setAlpha(node->getAlpha());
@@ -40,15 +40,15 @@ void cudaSearch(Node *node, Side side, Side maximizer, int depth) {
 }
 
 __global__
-void cudaTreeKernel(Move *moves, Board *board, int *values, Side side, 
+void cudaTreeKernel(Move *moves, DeviceBoard *board, int *values, Side side, 
     Side maximizer, int alpha, int beta, int depth) {
     // only one thread does high-level tasks
     if (threadIdx.x == 0) {
         // make one new node per block
         Move *move = new Move(moves[blockIdx.x].getX(), moves[blockIdx.x].getY());
-        Board *newBoard = board->copy();
+        DeviceBoard *newBoard = board->copy();
         newBoard->doMove(move, side);
-        Node *node = new Node(move, side, maximizer, newBoard);
+        DeviceNode *node = new DeviceNode(move, side, maximizer, newBoard);
 
         // pass down alpha and beta
         node->setAlpha(alpha);
@@ -67,7 +67,7 @@ void cudaTreeKernel(Move *moves, Board *board, int *values, Side side,
 
 }
 
-void cudaCallTreeKernel(Move *moves, Board *board, int *values, Side side, 
+void cudaCallTreeKernel(Move *moves, DeviceBoard *board, int *values, Side side, 
     Side maximizer, int alpha, int beta, int numMoves, int depth) {
 
     cudaTreeKernel<<<numMoves, 64>>>(moves, board, values, side, 
