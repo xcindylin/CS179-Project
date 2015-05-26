@@ -3,50 +3,64 @@
 /*
  * Make a BOARD_SIZExBOARD_SIZE othello board and initialize it to the standard setup.
  */
+CUDA_CALLABLE_MEMBER
 Board::Board() {
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        taken[i] = 0;
+        black[i] = 0;
+    }
     // taken.set(7 + BOARD_SIZE * 7);
-    taken.set((BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2 - 1));
+    taken[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
     // taken.set(7 + BOARD_SIZE * 8);
-    taken.set((BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2));
+    taken[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2)] = 1;
     // taken.set(8 + BOARD_SIZE * 7);
-    taken.set((BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1));
+    taken[(BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
     // taken.set(8 + BOARD_SIZE * 8);
-    taken.set((BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2));
+    taken[(BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2)] = 1;
     // black.set(8 + BOARD_SIZE * 7);
-    black.set((BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1));
+    black[(BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
     // black.set(7 + BOARD_SIZE * 8);
-    black.set((BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2));
+    black[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2)] = 1;
 }
 
 /*
  * Destructor for the board.
  */
+CUDA_CALLABLE_MEMBER
 Board::~Board() {
 }
 
 /*
  * Returns a copy of this board.
  */
+CUDA_CALLABLE_MEMBER
 Board *Board::copy() {
     Board *newBoard = new Board();
-    newBoard->black = black;
-    newBoard->taken = taken;
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        newBoard->black[i] = black[i];
+        newBoard->taken[i] = taken[i];
+    }
     return newBoard;
 }
 
+CUDA_CALLABLE_MEMBER
 bool Board::occupied(int x, int y) {
     return taken[x + BOARD_SIZE*y];
 }
 
+CUDA_CALLABLE_MEMBER
 bool Board::get(Side side, int x, int y) {
-    return occupied(x, y) && (black[x + BOARD_SIZE*y] == (side == BLACK));
+    return occupied(x, y) && (black[x + BOARD_SIZE*y] == boolToInt(side == BLACK));
 }
 
+CUDA_CALLABLE_MEMBER
 void Board::set(Side side, int x, int y) {
-    taken.set(x + BOARD_SIZE*y);
-    black.set(x + BOARD_SIZE*y, side == BLACK);
+    taken[x + BOARD_SIZE*y] = 1;
+    // if side is black, side == BLACK will evaluate to 1
+    black[x + BOARD_SIZE*y] = boolToInt(side == BLACK);
 }
 
+CUDA_CALLABLE_MEMBER
 bool Board::onBoard(int x, int y) {
     return(0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE);
 }
@@ -56,6 +70,7 @@ bool Board::onBoard(int x, int y) {
  * Returns true if the game is finished; false otherwise. The game is finished 
  * if neither side has a legal move.
  */
+CUDA_CALLABLE_MEMBER
 bool Board::isDone() {
     return !(hasMoves(BLACK) || hasMoves(WHITE));
 }
@@ -63,10 +78,11 @@ bool Board::isDone() {
 /*
  * Returns true if there are legal moves for the given side.
  */
+CUDA_CALLABLE_MEMBER
 bool Board::hasMoves(Side side) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            Move move(i, j);
+            Move move(i,j);
             if (checkMove(&move, side)) return true;
         }
     }
@@ -85,9 +101,22 @@ vector<Move> Board::getMoves(Side side) {
     return movesList;
 }
 
+__device__
+thrust::device_vector<Move> Board::getMoves(Side side) {
+    // find moves on the GPU
+    thrust::device_vector<Move> movesList;
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            Move move(i, j);
+            if (checkMove(&move, side)) movesList.push_back(move);
+        }
+    }
+}
+
 /*
  * Returns true if a move is legal for the given side; false otherwise.
  */
+CUDA_CALLABLE_MEMBER
 bool Board::checkMove(Move *m, Side side) {
     // Passing is only legal if you have no moves.
     if (m == NULL) return !hasMoves(side);
@@ -122,6 +151,7 @@ bool Board::checkMove(Move *m, Side side) {
 /*
  * Modifies the board to reflect the specified move.
  */
+CUDA_CALLABLE_MEMBER
 void Board::doMove(Move *m, Side side) {
     // A NULL move means pass.
     if (m == NULL) return;
@@ -162,6 +192,7 @@ void Board::doMove(Move *m, Side side) {
 /*
  * Current count of given side's stones.
  */
+CUDA_CALLABLE_MEMBER
 int Board::count(Side side) {
     return (side == BLACK) ? countBlack() : countWhite();
 }
@@ -169,21 +200,33 @@ int Board::count(Side side) {
 /*
  * Current count of black stones.
  */
+CUDA_CALLABLE_MEMBER
 int Board::countBlack() {
-    return black.count();
+    int count = 0;
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        count += black[i];
+    }
+    return count;
 }
 
 /*
  * Current count of white stones.
  */
+CUDA_CALLABLE_MEMBER
 int Board::countWhite() {
-    return taken.count() - black.count();
+    int count = 0;
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        count += taken[i];
+        count -= black[i];
+    }
+    return count;
 }
 
 /* 
  * Return the score of this board state for the maximizer.
  */
-float Board::getScore(Side maximizer) {
+CUDA_CALLABLE_MEMBER
+int Board::getScore(Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
     float score;
 
@@ -254,16 +297,20 @@ float Board::getScore(Side maximizer) {
  }
 
 // new functions
+ CUDA_CALLABLE_MEMBER
  int Board::boolToInt(bool b) {
     return b ? 1 : 0;
  }
 
+CUDA_CALLABLE_MEMBER
 int Board::getMovesScore(Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
+    vector<Move> moves = getMoves(maximizer);
     vector<Move> opponentMoves = getMoves(minimizer);
-    return -opponentMoves.size();
+    return moves.size()-opponentMoves.size();
 }
 
+CUDA_CALLABLE_MEMBER
 int Board::getFrontierScore(Side maximizer) {
     int score = 0;
     bool frontier;

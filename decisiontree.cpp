@@ -11,13 +11,24 @@ DecisionTree::~DecisionTree() {
 }
 
 Move *DecisionTree::findBestMove(int depth) {
-    search(root, depth);
-    // find the actual best move
-    vector<Node *> children = root->getChildren();
-    Node *best = children[0];
-    for(int i = 1; i < children.size(); i++) {
-        if (children[i]->getBeta() > best->getBeta()) {
-            best = children[i];
+    Board *board = root->getBoard();
+    vector<Move> moves = board->getMoves(maximizer);
+    Node *best = NULL;
+    for (int i = 0; i < moves.size(); i++) {
+        Move *move = new Move(moves[i].getX(), moves[i].getY());
+        Board *newBoard = board->copy();
+        newBoard->doMove(move, maximizer);
+        Node *child = new Node(move, maximizer, maximizer, newBoard);
+
+        // pass alpha and beta values down
+        child->setAlpha(root->getAlpha());
+        child->setBeta(root->getBeta());
+
+        // search child
+        search(child, depth - 1);
+
+        if (best == NULL || child->getBeta() > best->getBeta()) {
+            best = child;
         }
     }
     return best->getMove();
@@ -42,7 +53,6 @@ void DecisionTree::search(Node *startingNode, int depth) {
         // pass alpha and beta values down
         child->setAlpha(startingNode->getAlpha());
         child->setBeta(startingNode->getBeta());
-        startingNode->addChild(child);
 
         // search child
         search(child, depth - 1);
@@ -52,6 +62,8 @@ void DecisionTree::search(Node *startingNode, int depth) {
         } else {
             startingNode->setAlpha(max(startingNode->getAlpha(), child->getBeta()));
         }
+
+        delete child;
 
         if (startingNode->getAlpha() > startingNode->getBeta()) {
             return;

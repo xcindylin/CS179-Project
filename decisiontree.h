@@ -16,7 +16,7 @@ protected:
 	Side maximizer;
 
 public:
-	DecisionTree(Board *board, Side side);
+    DecisionTree(Board *board, Side side);
 	~DecisionTree();
 
 	Move *findBestMove(int depth);

@@ -1,13 +1,13 @@
-#include "player.h"
+#include "gpuplayer.h"
 
-Player::Player(Side side) {
+GPUPlayer::GPUPlayer(Side side) {
     this->side = side;
     otherSide = side == BLACK ? WHITE : BLACK;
     board = new Board();
 
 }
 
-Player::~Player() {
+GPUPlayer::~GPUPlayer() {
 }
 
 Move *Player::doMove(Move *opponentsMove) {
@@ -15,8 +15,8 @@ Move *Player::doMove(Move *opponentsMove) {
     if (!board->hasMoves(side)) {
         return NULL;
     }
-    DecisionTree *tree = new DecisionTree(board, side);
-    Move *moveToMake = tree->findBestMove(3);
+    ParallelDecisionTree *tree = new DecisionTree(board, side);
+    Move *moveToMake = tree->search(3);
     board->doMove(moveToMake, side);
     return moveToMake;
 }

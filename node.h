@@ -1,6 +1,13 @@
 #ifndef __NODE_H__
 #define __NODE_H__
 
+/* from http://stackoverflow.com/questions/6978643/cuda-and-classes */
+#ifdef __CUDACC__
+#define CUDA_CALLABLE_MEMBER __host__ __device__
+#else
+#define CUDA_CALLABLE_MEMBER
+#endif
+
 #include <cmath>
 #include <vector>
 #include "common.h"
@@ -13,29 +20,25 @@ private:
 	Move *move;
 	Side side; // the side that made the move leading to this node
 	Side maximizer; // our side - maximizing side
-	double score;
-	double alpha;
-	double beta;
+	int score;
+	int alpha;
+	int beta;
 	Node *parent;
-	vector<Node *> children;
 
 public:
-	Node(Move *move, Side side, Side maximizer, Board *board);
-	~Node();
+	CUDA_CALLABLE_MEMBER Node(Move *move, Side side, Side maximizer, Board *board);
+	CUDA_CALLABLE_MEMBER ~Node();
 
-	Board *getBoard();
-	Move *getMove();
-	Side getSide();
-	Node *getParent();
-	void setParent(Node *node);
-	vector<Node *> getChildren();
-	double getScore();
-	double getAlpha();
-	double getBeta();
-	void setAlpha(double alpha);
-	void setBeta(double beta);
-
-	void addChild(Node *node);
+	CUDA_CALLABLE_MEMBER Board *getBoard();
+	CUDA_CALLABLE_MEMBER Move *getMove();
+	CUDA_CALLABLE_MEMBER Side getSide();
+	CUDA_CALLABLE_MEMBER Node *getParent();
+	CUDA_CALLABLE_MEMBER void setParent(Node *node);
+	CUDA_CALLABLE_MEMBER int getScore();
+	CUDA_CALLABLE_MEMBER int getAlpha();
+	CUDA_CALLABLE_MEMBER int getBeta();
+	CUDA_CALLABLE_MEMBER void setAlpha(int alpha);
+	CUDA_CALLABLE_MEMBER void setBeta(int beta);
 
 };
 

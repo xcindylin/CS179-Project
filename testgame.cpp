@@ -48,5 +48,7 @@ int main() {
     cout << "Black score: " << board->countBlack() << endl;
     cout << "White score: " << board->countWhite() << endl;
 
+    // Run game on GPU here
+
     return 0;
 }

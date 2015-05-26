@@ -1,5 +1,6 @@
 #include "node.h"
 
+CUDA_CALLABLE_MEMBER
 Node::Node(Move *move, Side side, Side maximizer, Board *board) {
 	this->move = move;
 	this->side = side;
@@ -10,55 +11,58 @@ Node::Node(Move *move, Side side, Side maximizer, Board *board) {
 	this->beta = INFINITY;
 }
 
+CUDA_CALLABLE_MEMBER
 Node::~Node() {
 	// free some stuff
+	delete board;
 }
 
+CUDA_CALLABLE_MEMBER
 Board *Node::getBoard() {
 	return board;
 }
 
+CUDA_CALLABLE_MEMBER
 Move *Node::getMove() {
 	return move;
 }
 
+CUDA_CALLABLE_MEMBER
 Side Node::getSide() {
     return side;
 }
 
+CUDA_CALLABLE_MEMBER
 Node *Node::getParent() {
 	return parent;
 }
 
+CUDA_CALLABLE_MEMBER
 void Node::setParent(Node *node) {
 	parent = node;
 }
 
-vector<Node *> Node::getChildren() {
-	return children;
-}
-
-double Node::getScore() {
+CUDA_CALLABLE_MEMBER
+int Node::getScore() {
     return score;
 }
 
-double Node::getAlpha() {
+CUDA_CALLABLE_MEMBER
+int Node::getAlpha() {
     return alpha;
 }
 
-double Node::getBeta() {
+CUDA_CALLABLE_MEMBER
+int Node::getBeta() {
     return beta;
 }
 
-void Node::setAlpha(double alpha) {
+CUDA_CALLABLE_MEMBER
+void Node::setAlpha(int alpha) {
     this->alpha = alpha;
 }
 
-void Node::setBeta(double beta) {
+CUDA_CALLABLE_MEMBER
+void Node::setBeta(int beta) {
     this->beta = beta;
-}
-
-void Node::addChild(Node *node) {
-	children.push_back(node);
-	node->setParent(this);
 }
