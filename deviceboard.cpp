@@ -3,7 +3,6 @@
 /*
  * Make a BOARD_SIZExBOARD_SIZE othello board and initialize it to the standard setup.
  */
-CUDA_CALLABLE_MEMBER
 DeviceBoard::DeviceBoard() {
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
         taken[i] = 0;
@@ -26,14 +25,12 @@ DeviceBoard::DeviceBoard() {
 /*
  * Destructor for the board.
  */
-CUDA_CALLABLE_MEMBER
 DeviceBoard::~DeviceBoard() {
 }
 
 /*
  * Returns a copy of this board.
  */
-CUDA_CALLABLE_MEMBER
 DeviceBoard *DeviceBoard::copy() {
     DeviceBoard *newDeviceBoard = new DeviceBoard();
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
@@ -61,7 +58,7 @@ void DeviceBoard::set(Side side, int x, int y) {
 }
 
 CUDA_CALLABLE_MEMBER
-bool DeviceBoard::onDeviceBoard(int x, int y) {
+bool DeviceBoard::onBoard(int x, int y) {
     return(0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE);
 }
 
@@ -124,13 +121,13 @@ bool DeviceBoard::checkMove(Move *m, Side side) {
             // Is there a capture in that direction?
             int x = X + dx;
             int y = Y + dy;
-            if (onDeviceBoard(x, y) && get(other, x, y)) {
+            if (onBoard(x, y) && get(other, x, y)) {
                 do {
                     x += dx;
                     y += dy;
-                } while (onDeviceBoard(x, y) && get(other, x, y));
+                } while (onBoard(x, y) && get(other, x, y));
 
-                if (onDeviceBoard(x, y) && get(side, x, y)) return true;
+                if (onBoard(x, y) && get(side, x, y)) return true;
             }
         }
     }
@@ -160,14 +157,14 @@ void DeviceBoard::doMove(Move *m, Side side) {
             do {
                 x += dx;
                 y += dy;
-            } while (onDeviceBoard(x, y) && get(other, x, y));
+            } while (onBoard(x, y) && get(other, x, y));
 
-            if (onDeviceBoard(x, y) && get(side, x, y)) {
+            if (onBoard(x, y) && get(side, x, y)) {
                 x = X;
                 y = Y;
                 x += dx;
                 y += dy;
-                while (onDeviceBoard(x, y) && get(other, x, y)) {
+                while (onBoard(x, y) && get(other, x, y)) {
                     set(side, x, y);
                     x += dx;
                     y += dy;
@@ -291,6 +288,7 @@ int DeviceBoard::getScore(Side maximizer) {
     return b ? 1 : 0;
  }
 
+CUDA_CALLABLE_MEMBER
 int DeviceBoard::getMovesScore(Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
     vector<Move> moves = getMoves(maximizer);

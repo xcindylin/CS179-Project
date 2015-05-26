@@ -34,9 +34,9 @@ private:
     CUDA_CALLABLE_MEMBER bool onBoard(int x, int y);
       
 public:
-    CUDA_CALLABLE_MEMBER Board();
-    CUDA_CALLABLE_MEMBER ~Board();
-    CUDA_CALLABLE_MEMBER Board *copy();
+    DeviceBoard();
+    ~DeviceBoard();
+    DeviceBoard *copy();
         
     CUDA_CALLABLE_MEMBER bool isDone();
     CUDA_CALLABLE_MEMBER bool hasMoves(Side side);
@@ -50,7 +50,7 @@ public:
 
     // new functions
     CUDA_CALLABLE_MEMBER int boolToInt(bool b);
-    int getMovesScore(Side maximizer);
+    CUDA_CALLABLE_MEMBER int getMovesScore(Side maximizer);
     CUDA_CALLABLE_MEMBER int getFrontierScore(Side maximizer);
 };
 
