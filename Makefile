@@ -35,41 +35,12 @@ else
 endif
 
 TARGETS = testgame
+OBJS = testgame.o board.o deviceboard.o decisiontree.o paralleldecisiontree.o node.o devicenode.o exampleplayer.o player.o gpuplayer.o
 
 all: $(TARGETS)
 
-testgame: testgame.cpp testgame.o board.o deviceboard.o decisiontree.o paralleldecisiontree.o node.o devicenode.o exampleplayer.o player.o gpuplayer.o
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-testgame.o: tree_cuda.cu
+testgame: testgame.cpp board.cpp deviceboard.cpp decisiontree.cpp paralleldecisiontree.cpp tree_cuda.cu node.cpp devicenode.cpp exampleplayer.cpp player.cpp gpuplayer.cpp $(OBJS)
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
-
-exampleplayer.o: exampleplayer.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-player.o: player.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-gpuplayer.o: gpuplayer.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-devicenode.o: devicenode.cpp
-	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
-
-node.o: node.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-paralleldecisiontree.o: paralleldecisiontree.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-decisiontree.o: decisiontree.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
-
-deviceboard.o: deviceboard.cpp
-	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
-
-board.o: board.cpp
-	$(CC) $< -std=c++0x -o $@ testgame.o -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
 
 clean:
 	rm -f *.o $(TARGETS)

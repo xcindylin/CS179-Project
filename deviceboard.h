@@ -11,6 +11,7 @@
 
 #include "common.h"
 #include <vector>
+#include <cstddef>
 
 #define BOARD_SIZE 16
 

@@ -3,10 +3,14 @@
 
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <cuda_runtime.h>
+
 #include "common.h"
 #include "board.h"
 #include "node.h"
 #include "tree_cuda.cuh"
+
 using namespace std;
 
 class ParallelDecisionTree { 

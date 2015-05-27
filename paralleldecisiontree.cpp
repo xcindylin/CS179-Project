@@ -1,4 +1,4 @@
-#include <paralleldecisiontree.h>
+#include "paralleldecisiontree.h"
 
 ParallelDecisionTree::ParallelDecisionTree(Board *board, Side maximizer) {
     // this is our side
