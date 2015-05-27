@@ -33,6 +33,9 @@ Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
 	Side oppositeSide = startingNode->getSide() == BLACK ? WHITE : BLACK;
 	vector<Move> moves = board->getMoves(oppositeSide);
 
+    if (moves.size() == 0) {
+        return NULL;
+    }
 	/* CPU search the first child node */
 	Move *move = new Move(moves[0].getX(), moves[0].getY());
     Board *newBoard = board->copy();
