@@ -15,41 +15,53 @@ NVCC            ?= $(CUDA_BIN_PATH)/nvcc
 
 # OS-specific build flags
 ifneq ($(DARWIN),)
-      LDFLAGS   := -Xlinker -rpath $(CUDA_LIB_PATH) -L$(CUDA_LIB_PATH) -lcudart
+      LDFLAGS   := -Xlinker -rpath $(CUDA_LIB_PATH) -L$(CUDA_LIB_PATH) -lcudart -lcudadevrt
       CCFLAGS   := -arch $(OS_ARCH)
 else
   ifeq ($(OS_SIZE),32)
-      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart
+      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart -lcudadevrt
       CCFLAGS   := -m32
   else
-      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart
+      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart -lcudadevrt
       CCFLAGS   := -m64
   endif
 endif
 
 # OS-architecture specific flags
 ifeq ($(OS_SIZE),32)
-      NVCCFLAGS := -m32
+      NVCCFLAGS := -m32 -rdc=true
 else
-      NVCCFLAGS := -m64
+      NVCCFLAGS := -m64 -rdc=true
 endif
 
 TARGETS = testgame
-OBJS = testgame.o board.o deviceboard.o node.o devicenode.o exampleplayer.o player.o gpuplayer.o decisiontree.o paralleldecisiontree.o tree_cuda.o
+OBJS = board.o node.o exampleplayer.o player.o decisiontree.o gpuplayer.o paralleldecisiontree.o tree_cuda.o deviceboard.o devicenode.o
 
 all: $(TARGETS)
 
-testgame: $(OBJS)
-	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ $^
-
 gpuplayer.o: gpuplayer.cpp
-	$(CC) -c -std=c++0x -O3 -Wall -I$(CUDA_INC_PATH) $<
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 paralleldecisiontree.o: paralleldecisiontree.cpp
-	$(CC) -c -std=c++0x -O3 -Wall -I$(CUDA_INC_PATH) $<
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 tree_cuda.o: tree_cuda.cu
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $^
+
+deviceboard.o: deviceboard.cu
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $^
+
+devicenode.o: devicenode.cu
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $^
+
+testgame.o: testgame.cpp
+	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
+
+link.o:
+	$(NVCC) -dlink $(GENCODE_FLAGS) gpuplayer.o paralleldecisiontree.o tree_cuda.o deviceboard.o devicenode.o testgame.o -o $@
+
+testgame: testgame.o $(OBJS) link.o
+	$(CC) $(CCFLAGS) -o $@ $+ $(LDFLAGS)
 
 clean:
 	rm -f *.o $(TARGETS)
