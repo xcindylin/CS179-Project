@@ -1,6 +1,6 @@
 #include "devicenode.h"
 
-__device__
+CUDA_CALLABLE_MEMBER
 DeviceNode::DeviceNode(Move *move, Side side, Side maximizer, DeviceBoard *board) {
 	this->move = move;
 	this->side = side;
@@ -11,58 +11,58 @@ DeviceNode::DeviceNode(Move *move, Side side, Side maximizer, DeviceBoard *board
 	this->beta = INFINITY;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 DeviceNode::~DeviceNode() {
 	// free some stuff
 	delete board;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 DeviceBoard *DeviceNode::getBoard() {
 	return board;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 Move *DeviceNode::getMove() {
 	return move;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 Side DeviceNode::getSide() {
     return side;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 DeviceNode *DeviceNode::getParent() {
 	return parent;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 void DeviceNode::setParent(DeviceNode *node) {
 	parent = node;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 int DeviceNode::getScore() {
     return score;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 int DeviceNode::getAlpha() {
     return alpha;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 int DeviceNode::getBeta() {
     return beta;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 void DeviceNode::setAlpha(int alpha) {
     this->alpha = alpha;
 }
 
-__device__
+CUDA_CALLABLE_MEMBER
 void DeviceNode::setBeta(int beta) {
     this->beta = beta;
 }

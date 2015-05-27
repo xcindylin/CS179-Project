@@ -14,7 +14,7 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             Move *move = new Move(i, j);
-            if (checkMove(&move, side)) {
+            if (board->checkMove(move, side)) {
                 DeviceBoard *newBoard = board->copy();
                 newBoard->doMove(move, oppositeSide);
                 DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);

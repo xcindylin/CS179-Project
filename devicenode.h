@@ -1,6 +1,14 @@
 #ifndef __DEVICENODE_H__
 #define __DEVICENODE_H__
 
+/* from http://stackoverflow.com/questions/6978643/cuda-and-classes */
+#ifdef __CUDACC__
+#define CUDA_CALLABLE_MEMBER __host__ __device__
+#include <thrust/device_vector.h>
+#else
+#define CUDA_CALLABLE_MEMBER
+#endif
+
 #include <cmath>
 #include <vector>
 #include "common.h"
@@ -19,19 +27,19 @@ private:
 	DeviceNode *parent;
 
 public:
-	__device__ DeviceNode(Move *move, Side side, Side maximizer, DeviceBoard *board);
-	__device__ ~DeviceNode();
+	CUDA_CALLABLE_MEMBER DeviceNode(Move *move, Side side, Side maximizer, DeviceBoard *board);
+	CUDA_CALLABLE_MEMBER ~DeviceNode();
 
-	__device__ DeviceBoard *getBoard();
-	__device__ Move *getMove();
-	__device__ Side getSide();
-	__device__ DeviceNode *getParent();
-	__device__ void setParent(DeviceNode *node);
-	__device__ int getScore();
-	__device__ int getAlpha();
-	__device__ int getBeta();
-	__device__ void setAlpha(int alpha);
-	__device__ void setBeta(int beta);
+	CUDA_CALLABLE_MEMBER DeviceBoard *getBoard();
+	CUDA_CALLABLE_MEMBER Move *getMove();
+	CUDA_CALLABLE_MEMBER Side getSide();
+	CUDA_CALLABLE_MEMBER DeviceNode *getParent();
+	CUDA_CALLABLE_MEMBER void setParent(DeviceNode *node);
+	CUDA_CALLABLE_MEMBER int getScore();
+	CUDA_CALLABLE_MEMBER int getAlpha();
+	CUDA_CALLABLE_MEMBER int getBeta();
+	CUDA_CALLABLE_MEMBER void setAlpha(int alpha);
+	CUDA_CALLABLE_MEMBER void setBeta(int beta);
 
 };
 
