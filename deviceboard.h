@@ -25,9 +25,6 @@ using namespace std;
 class DeviceBoard {
    
 private:
-    char black[BOARD_SIZE * BOARD_SIZE];
-    char taken[BOARD_SIZE * BOARD_SIZE];    
-       
     CUDA_CALLABLE_MEMBER bool occupied(int x, int y);
     CUDA_CALLABLE_MEMBER bool get(Side side, int x, int y);
     CUDA_CALLABLE_MEMBER void set(Side side, int x, int y);
@@ -36,6 +33,8 @@ private:
 public:
     CUDA_CALLABLE_MEMBER DeviceBoard();
     CUDA_CALLABLE_MEMBER ~DeviceBoard();
+    char black[BOARD_SIZE * BOARD_SIZE];
+    char taken[BOARD_SIZE * BOARD_SIZE];
     CUDA_CALLABLE_MEMBER DeviceBoard *copy();
         
     CUDA_CALLABLE_MEMBER bool isDone();

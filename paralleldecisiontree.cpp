@@ -10,11 +10,24 @@ ParallelDecisionTree::~ParallelDecisionTree() {
     // free some stuff
 }
 
-Move ParallelDecisionTree::search(Node *startingNode, int depth) {
+DeviceBoard *ParallelDecisionTree::HostToDeviceBoard(Board *board) {
+    DeviceBoard *newDeviceBoard = new DeviceBoard();
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        newDeviceBoard->black[i] = board->black[i];
+        newDeviceBoard->taken[i] = board->taken[i];
+    }
+    return newDeviceBoard;
+}
+
+Node *ParallelDecisionTree::getRoot() {
+    return root;
+}
+
+Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
 	if (depth == 0) {
 		startingNode->setAlpha(startingNode->getScore());
 		startingNode->setBeta(startingNode->getScore());
-		return;
+		return NULL;
 	}
 	Board *board = startingNode->getBoard();
 	Side oppositeSide = startingNode->getSide() == BLACK ? WHITE : BLACK;
@@ -31,11 +44,11 @@ Move ParallelDecisionTree::search(Node *startingNode, int depth) {
     child->setBeta(startingNode->getBeta());
 
     // search child
-    Move best = search(child, depth - 1);
+    Move *best = search(child, depth - 1);
 
     // array to store the values of interest of the children
     int *values;
-    values = malloc(moves.size() * sizeof(int));
+    values = (int *)calloc(moves.size(), sizeof(int));
 
     if (startingNode->getSide() == maximizer) {
         startingNode->setBeta(min(startingNode->getBeta(), child->getAlpha()));
@@ -51,14 +64,14 @@ Move ParallelDecisionTree::search(Node *startingNode, int depth) {
     int numMoves = moves.size() - 1;
     Move *dev_moves;
     Move *moves_ptr = &moves[1];
-    Board *dev_board;
+    DeviceBoard *dev_board;
     int *dev_values;
 
     cudaMalloc((void **) &dev_moves, numMoves * sizeof(Move));
-    cudaMalloc((void **) &dev_board, sizeof(Board));
+    cudaMalloc((void **) &dev_board, sizeof(DeviceBoard));
     cudaMalloc((void **) &dev_values, numMoves * sizeof(int));
 
-    cudaMemcpy(dev_board, board->copy(), sizeof(Board), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_board, HostToDeviceBoard(board), sizeof(DeviceBoard), cudaMemcpyHostToDevice);
     cudaMemcpy(dev_moves, moves_ptr, numMoves * sizeof(Move), cudaMemcpyHostToDevice);
 
     cudaMemset(dev_values, 0, numMoves * sizeof(int));
@@ -92,5 +105,6 @@ Move ParallelDecisionTree::search(Node *startingNode, int depth) {
     	startingNode->setAlpha(best);
     }
 
-    return moves[index];
+    Move *curMove = new Move(moves[index].getX(), moves[index].getY());
+    return curMove;
 }

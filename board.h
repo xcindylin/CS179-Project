@@ -17,9 +17,6 @@ using namespace std;
 class Board {
    
 private:
-    char black[BOARD_SIZE * BOARD_SIZE];
-    char taken[BOARD_SIZE * BOARD_SIZE];    
-       
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
@@ -28,6 +25,8 @@ private:
 public:
     Board();
     ~Board();
+    char black[BOARD_SIZE * BOARD_SIZE];
+    char taken[BOARD_SIZE * BOARD_SIZE];
     Board *copy();
         
     bool isDone();

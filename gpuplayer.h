@@ -4,7 +4,7 @@
 #include <iostream>
 #include "common.h"
 #include "board.h"
-#include "decisiontree.h"
+#include "paralleldecisiontree.h"
 using namespace std;
 
 class GPUPlayer {

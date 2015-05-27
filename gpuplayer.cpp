@@ -10,13 +10,13 @@ GPUPlayer::GPUPlayer(Side side) {
 GPUPlayer::~GPUPlayer() {
 }
 
-Move *Player::doMove(Move *opponentsMove) {
+Move *GPUPlayer::doMove(Move *opponentsMove) {
     board->doMove(opponentsMove, otherSide);
     if (!board->hasMoves(side)) {
         return NULL;
     }
-    ParallelDecisionTree *tree = new DecisionTree(board, side);
-    Move *moveToMake = tree->search(3);
+    ParallelDecisionTree *tree = new ParallelDecisionTree(board, side);
+    Move *moveToMake = tree->search(tree->getRoot(), 3);
     board->doMove(moveToMake, side);
     return moveToMake;
 }
