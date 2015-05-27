@@ -86,7 +86,7 @@ Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
     // find the best move
     int index = 0;
     if (startingNode->getSide() == maximizer) {
-    	int best = INFINITY;
+    	int best = 99999999;
     	for (int i = 0; i <= numMoves; i++) {
     		if (values[i] < best) {
     			best = values[i];
@@ -95,7 +95,7 @@ Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
     	}
     	startingNode->setBeta(best);
     } else {
-    	int best = -INFINITY;
+    	int best = -99999999;
     	for (int i = 0; i <= numMoves; i++) {
     		if (values[i] > best) {
     			best = values[i];

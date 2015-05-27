@@ -6,8 +6,8 @@ Node::Node(Move *move, Side side, Side maximizer, Board *board) {
 	this->maximizer = maximizer;
 	this->board = board;
 	this->score = board->getScore(maximizer);
-	this->alpha = -INFINITY;
-	this->beta = INFINITY;
+	this->alpha = -99999999;
+	this->beta = 99999999;
 }
 
 Node::~Node() {
