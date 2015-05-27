@@ -102,7 +102,7 @@ bool DeviceBoard::hasMoves(Side side) {
 CUDA_CALLABLE_MEMBER
 int DeviceBoard::countMoves(Side side) {
     // find moves on the GPU
-    int count;
+    int count = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             Move move(i, j);
@@ -312,7 +312,7 @@ int DeviceBoard::getMovesScore(Side maximizer) {
 CUDA_CALLABLE_MEMBER
 int DeviceBoard::getFrontierScore(Side maximizer) {
     int score = 0;
-    bool frontier;
+    bool frontier = false;
 
     for (int x = 1; x < BOARD_SIZE-1; x++) {
         for (int y = 1; y < BOARD_SIZE-1; y++) {
@@ -333,14 +333,15 @@ int DeviceBoard::getFrontierScore(Side maximizer) {
                         }
                     }
                 }
-                // add to the score if maximizer is in the frontier
-                if (get(maximizer, x, y)) {
-                    score++;
-                }
-                // subtract from the score if the minimizer is in
-                // the frontier
-                else {
-                    score--;
+                if (frontier) {
+                    if (get(maximizer, x, y)) {
+                        // add to the score if maximizer is in the frontier
+                        score--;
+                    } else {
+                        // subtract from the score if the minimizer is in
+                        // the frontier
+                        score++;
+                    }
                 }
             }
             frontier = false;
