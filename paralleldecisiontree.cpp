@@ -123,6 +123,11 @@ Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
     	startingNode->setAlpha(best);
     }
 
+    cudaFree(dev_values);
+    cudaFree(dev_taken);
+    cudaFree(dev_black);
+    cudaFree(dev_moves);
+
     Move *curMove = new Move(moves[index].getX(), moves[index].getY());
     return curMove;
 }

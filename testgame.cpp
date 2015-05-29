@@ -94,7 +94,7 @@ int main() {
     turn = BLACK;
     m = NULL;
 
-    cout << "Starting GPU game..."
+    cout << "Starting GPU game..." << endl;
     START_TIMER();
     while (!board->isDone()) {
         // get the current player's move
