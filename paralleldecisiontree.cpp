@@ -1,5 +1,15 @@
 #include "paralleldecisiontree.h"
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+    if (code != cudaSuccess) 
+    {
+        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        exit(code);
+    }
+}
+
 ParallelDecisionTree::ParallelDecisionTree(Board *board, Side maximizer) {
     // this is our side
     this->maximizer = maximizer;
@@ -10,14 +20,14 @@ ParallelDecisionTree::~ParallelDecisionTree() {
     // free some stuff
 }
 
-DeviceBoard *ParallelDecisionTree::HostToDeviceBoard(Board *board) {
-    DeviceBoard *newDeviceBoard = new DeviceBoard();
-    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-        newDeviceBoard->black[i] = board->black[i];
-        newDeviceBoard->taken[i] = board->taken[i];
-    }
-    return newDeviceBoard;
-}
+// DeviceBoard *ParallelDecisionTree::HostToDeviceBoard(Board *board) {
+//     DeviceBoard *newDeviceBoard = new DeviceBoard();
+//     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+//         newDeviceBoard->black[i] = board->black[i];
+//         newDeviceBoard->taken[i] = board->taken[i];
+//     }
+//     return newDeviceBoard;
+// }
 
 Node *ParallelDecisionTree::getRoot() {
     return root;
@@ -67,24 +77,43 @@ Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
     int numMoves = moves.size() - 1;
     Move *dev_moves;
     Move *moves_ptr = &moves[1];
-    DeviceBoard *dev_board;
+    char *dev_black;
+    char *dev_taken;
     int *dev_values;
 
-    cudaMalloc((void **) &dev_moves, numMoves * sizeof(Move));
-    cudaMalloc((void **) &dev_board, sizeof(DeviceBoard));
-    cudaMalloc((void **) &dev_values, numMoves * sizeof(int));
+    char *black;
+    char *taken;
 
-    cudaMemcpy(dev_board, HostToDeviceBoard(board), sizeof(DeviceBoard), cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_moves, moves_ptr, numMoves * sizeof(Move), cudaMemcpyHostToDevice);
+    black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+    taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
 
-    cudaMemset(dev_values, 0, numMoves * sizeof(int));
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        black[i] = board->black[i];
+        taken[i] = board->taken[i];
+    }
+
+    gpuErrchk(cudaMalloc((void **) &dev_moves, numMoves * sizeof(Move)));
+    gpuErrchk(cudaMalloc((void **) &dev_black, BOARD_SIZE * BOARD_SIZE * sizeof(char)));
+    gpuErrchk(cudaMalloc((void **) &dev_taken, BOARD_SIZE * BOARD_SIZE * sizeof(char)));
+    gpuErrchk(cudaMalloc((void **) &dev_values, numMoves * sizeof(int)));
+
+    gpuErrchk(cudaMemcpy(dev_black, board->black, BOARD_SIZE * BOARD_SIZE * sizeof(char), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(dev_taken, board->taken, BOARD_SIZE * BOARD_SIZE * sizeof(char), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(dev_moves, moves_ptr, numMoves * sizeof(Move), cudaMemcpyHostToDevice));
+
+    gpuErrchk(cudaMemset(dev_values, 0, numMoves * sizeof(int)));
 
     // call kernel to search the rest of the children in parallel
-    cudaCallTreeKernel(dev_moves, dev_board, dev_values, oppositeSide, maximizer, 
+    cudaCallTreeKernel(dev_moves, dev_black, dev_taken, dev_values, oppositeSide, maximizer, 
     	startingNode->getAlpha(), startingNode->getBeta(), numMoves, depth - 1);
 
     // copy remaining child values into host array
-    cudaMemcpy(values + 1, dev_values, numMoves * sizeof(int), cudaMemcpyDeviceToHost);
+    gpuErrchk(cudaMemcpy(values + 1, dev_values, numMoves * sizeof(int), cudaMemcpyDeviceToHost));
+
+    cout << "depth: " << depth << endl;
+    for (int i = 0; i <= numMoves; i++) {
+        cout << values[i] << endl;
+    }
 
     // find the best move
     int index = 0;

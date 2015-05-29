@@ -20,34 +20,34 @@ int main() {
     Side turn = BLACK;
     Move *m = NULL;
 
-    while (!board->isDone()) {
-    	// get the current player's move
-        if (turn == BLACK) {
-            m = player1->doMove(m);
-        }
-        else {  
-            m = player2->doMove(m);   
-        }
+    // while (!board->isDone()) {
+    // 	// get the current player's move
+    //     if (turn == BLACK) {
+    //         m = player1->doMove(m);
+    //     }
+    //     else {  
+    //         m = player2->doMove(m);   
+    //     }
 
-    	if (!board->checkMove(m, turn)) {
-    		cout << "Illegal move made: " << turn << " address: " << m << endl;
-    	}
+    // 	if (!board->checkMove(m, turn)) {
+    // 		cout << "Illegal move made: " << turn << " address: " << m << endl;
+    // 	}
 
-    	// make move once it is determiend to be legal
-    	board->doMove(m, turn);
+    // 	// make move once it is determiend to be legal
+    // 	board->doMove(m, turn);
 
-    	// switch players
-    	if (turn == BLACK) {
-    		turn = WHITE;
-    	}
-    	else {
-    		turn = BLACK;
-    	}
-    }
+    // 	// switch players
+    // 	if (turn == BLACK) {
+    // 		turn = WHITE;
+    // 	}
+    // 	else {
+    // 		turn = BLACK;
+    // 	}
+    // }
 
-    cout << "Game completed." << endl;
-    cout << "Black score: " << board->countBlack() << endl;
-    cout << "White score: " << board->countWhite() << endl;
+    // cout << "Game completed." << endl;
+    // cout << "Black score: " << board->countBlack() << endl;
+    // cout << "White score: " << board->countWhite() << endl;
 
     // Run game on GPU here
     ExamplePlayer *player3 = new ExamplePlayer(WHITE);

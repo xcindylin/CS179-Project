@@ -12,8 +12,7 @@
 #include "common.h"
 #include <vector>
 #include <cstddef>
-
-#define BOARD_SIZE 16
+#include <cstdio>
 
 #define CORNER_WEIGHT 50
 #define MOVES_WEIGHT 2 // # moves cur_player - # moves opp_player
@@ -32,12 +31,12 @@ private:
     CUDA_CALLABLE_MEMBER bool onBoard(int x, int y);
       
 public:
-    CUDA_CALLABLE_MEMBER DeviceBoard();
+    CUDA_CALLABLE_MEMBER DeviceBoard(char *black, char *taken);
     CUDA_CALLABLE_MEMBER ~DeviceBoard();
-    char black[BOARD_SIZE * BOARD_SIZE];
-    char taken[BOARD_SIZE * BOARD_SIZE];
+    char *black;
+    char *taken;
     CUDA_CALLABLE_MEMBER DeviceBoard *copy();
-        
+
     CUDA_CALLABLE_MEMBER bool isDone();
     CUDA_CALLABLE_MEMBER bool hasMoves(Side side);
     CUDA_CALLABLE_MEMBER bool checkMove(Move *m, Side side);

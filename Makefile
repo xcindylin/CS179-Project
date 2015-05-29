@@ -15,23 +15,23 @@ NVCC            ?= $(CUDA_BIN_PATH)/nvcc
 
 # OS-specific build flags
 ifneq ($(DARWIN),)
-      LDFLAGS   := -Xlinker -rpath $(CUDA_LIB_PATH) -L$(CUDA_LIB_PATH) -lcudart -lcudadevrt
+      LDFLAGS   := -Xlinker -rpath $(CUDA_LIB_PATH) -L$(CUDA_LIB_PATH) -lcudart
       CCFLAGS   := -arch $(OS_ARCH)
 else
   ifeq ($(OS_SIZE),32)
-      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart -lcudadevrt
+      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart
       CCFLAGS   := -m32
   else
-      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart -lcudadevrt
+      LDFLAGS   := -L$(CUDA_LIB_PATH) -lcudart
       CCFLAGS   := -m64
   endif
 endif
 
 # OS-architecture specific flags
 ifeq ($(OS_SIZE),32)
-      NVCCFLAGS := -m32 -rdc=true
+      NVCCFLAGS := -m32 -rdc=true -lcudadevrt
 else
-      NVCCFLAGS := -m64 -rdc=true
+      NVCCFLAGS := -m64 -rdc=true -lcudadevrt
 endif
 
 TARGETS = testgame

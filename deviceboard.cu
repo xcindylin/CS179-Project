@@ -3,11 +3,10 @@
 /*
  * Make a BOARD_SIZExBOARD_SIZE othello board and initialize it to the standard setup.
  */
-DeviceBoard::DeviceBoard() {
-    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-        taken[i] = 0;
-        black[i] = 0;
-    }
+CUDA_CALLABLE_MEMBER
+DeviceBoard::DeviceBoard(char *black, char *taken) {
+    this->black = black;
+    this->taken = taken;
     // taken.set(7 + BOARD_SIZE * 7);
     taken[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
     // taken.set(7 + BOARD_SIZE * 8);
@@ -25,18 +24,35 @@ DeviceBoard::DeviceBoard() {
 /*
  * Destructor for the board.
  */
+CUDA_CALLABLE_MEMBER
 DeviceBoard::~DeviceBoard() {
+    free(taken);
+    free(black);
 }
 
 /*
  * Returns a copy of this board.
  */
+CUDA_CALLABLE_MEMBER
 DeviceBoard *DeviceBoard::copy() {
-    DeviceBoard *newDeviceBoard = new DeviceBoard();
-    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-        newDeviceBoard->black[i] = black[i];
-        newDeviceBoard->taken[i] = taken[i];
+    char *new_black;
+    char *new_taken;
+
+    new_black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+    new_taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+
+    if (new_black == NULL || new_taken == NULL) {
+        printf("BAD!!!\n");
     }
+
+    printf("%d\n", new_black);
+    printf("%d\n", new_taken);
+
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        new_black[i] = black[i];
+        new_taken[i] = taken[i];
+    }
+    DeviceBoard *newDeviceBoard = new DeviceBoard(new_black, new_taken);
     return newDeviceBoard;
 }
 

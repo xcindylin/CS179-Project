@@ -15,7 +15,17 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             Move *move = new Move(i, j);
             if (board->checkMove(move, oppositeSide)) {
-                DeviceBoard *newBoard = board->copy();
+                char *black;
+                char *taken;
+
+                black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+                taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+
+                for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+                    black[i] = board->black[i];
+                    taken[i] = board->taken[i];
+                }
+                DeviceBoard *newBoard = new DeviceBoard(black, taken);
                 newBoard->doMove(move, oppositeSide);
                 DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
 
@@ -71,13 +81,14 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
 }
 
 __global__
-void cudaTreeKernel(Move *moves, DeviceBoard *board, int *values, Side side, 
+void cudaTreeKernel(Move *moves, char *black, char *taken, int *values, Side side, 
     Side maximizer, int alpha, int beta, int depth) {
     // only one thread does high-level tasks
     if (threadIdx.x == 0) {
         // make one new node per block
         Move *move = new Move(moves[blockIdx.x].getX(), moves[blockIdx.x].getY());
-        DeviceBoard *newBoard = board->copy();
+
+        DeviceBoard *newBoard = new DeviceBoard(black, taken);
         newBoard->doMove(move, side);
         DeviceNode *node = new DeviceNode(move, side, maximizer, newBoard);
 
@@ -94,13 +105,16 @@ void cudaTreeKernel(Move *moves, DeviceBoard *board, int *values, Side side,
         } else {
             values[blockIdx.x] = node->getAlpha();
         }
+        printf("values: %d index: %d\n", values[blockIdx.x], blockIdx.x);
     }
 
 }
 
-void cudaCallTreeKernel(Move *moves, DeviceBoard *board, int *values, Side side, 
+void cudaCallTreeKernel(Move *moves, char *black, char *taken, int *values, Side side, 
     Side maximizer, int alpha, int beta, int numMoves, int depth) {
 
-    cudaTreeKernel<<<numMoves, 64>>>(moves, board, values, side, 
+    printf("hello...\n");
+
+    cudaTreeKernel<<<numMoves, 64>>>(moves, black, taken, values, side, 
        maximizer, alpha, beta, depth);
 }

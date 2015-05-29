@@ -16,7 +16,7 @@ Move *GPUPlayer::doMove(Move *opponentsMove) {
         return NULL;
     }
     ParallelDecisionTree *tree = new ParallelDecisionTree(board, side);
-    Move *moveToMake = tree->search(tree->getRoot(), 3);
+    Move *moveToMake = tree->search(tree->getRoot(), 2);
     board->doMove(moveToMake, side);
     return moveToMake;
 }

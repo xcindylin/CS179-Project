@@ -7,6 +7,8 @@
 #define CUDA_CALLABLE_MEMBER
 #endif
 
+#define BOARD_SIZE 16
+
 enum Side { 
     BLACK, WHITE
 };

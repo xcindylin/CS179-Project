@@ -5,8 +5,6 @@
 #include <vector>
 #include <cstddef>
 
-#define BOARD_SIZE 16
-
 #define CORNER_WEIGHT 50
 #define MOVES_WEIGHT 2 // # moves cur_player - # moves opp_player
 #define DIAGONAL_WEIGHT -10
