@@ -53,6 +53,7 @@ int main() {
     Side turn = BLACK;
     Move *m = NULL;
 
+    cout << "Starting CPU game..." << endl;
     START_TIMER();
     while (!board->isDone()) {
     	// get the current player's move
@@ -80,7 +81,7 @@ int main() {
     }
     STOP_RECORD_TIMER(cpu_ms);
 
-    cout << "Game completed." << endl;
+    cout << "CPU Game completed." << endl;
     cout << "Black score: " << board->countBlack() << endl;
     cout << "White score: " << board->countWhite() << endl;
 
@@ -93,6 +94,7 @@ int main() {
     turn = BLACK;
     m = NULL;
 
+    cout << "Starting GPU game..."
     START_TIMER();
     while (!board->isDone()) {
         // get the current player's move
@@ -120,7 +122,7 @@ int main() {
     }
     STOP_RECORD_TIMER(gpu_ms);
 
-    cout << "Game completed." << endl;
+    cout << "GPU Game completed." << endl;
     cout << "Black score: " << board->countBlack() << endl;
     cout << "White score: " << board->countWhite() << endl;
 
