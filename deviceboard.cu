@@ -30,32 +30,6 @@ DeviceBoard::~DeviceBoard() {
     free(black);
 }
 
-/*
- * Returns a copy of this board.
- */
-CUDA_CALLABLE_MEMBER
-DeviceBoard *DeviceBoard::copy() {
-    char *new_black;
-    char *new_taken;
-
-    new_black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
-    new_taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
-
-    if (new_black == NULL || new_taken == NULL) {
-        printf("BAD!!!\n");
-    }
-
-    printf("%d\n", new_black);
-    printf("%d\n", new_taken);
-
-    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-        new_black[i] = black[i];
-        new_taken[i] = taken[i];
-    }
-    DeviceBoard *newDeviceBoard = new DeviceBoard(new_black, new_taken);
-    return newDeviceBoard;
-}
-
 CUDA_CALLABLE_MEMBER
 bool DeviceBoard::occupied(int x, int y) {
     return taken[x + BOARD_SIZE*y];
@@ -78,7 +52,6 @@ bool DeviceBoard::onBoard(int x, int y) {
     return(0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE);
 }
 
- 
 /*
  * Returns true if the game is finished; false otherwise. The game is finished 
  * if neither side has a legal move.
@@ -101,19 +74,6 @@ bool DeviceBoard::hasMoves(Side side) {
     }
     return false;
 }
-
-// __device__
-// thrust::device_vector<Move> DeviceBoard::getMoves(Side side) {
-//     // find moves on the GPU
-//     thrust::device_vector<Move> movesList;
-//     for (int i = 0; i < BOARD_SIZE; i++) {
-//         for (int j = 0; j < BOARD_SIZE; j++) {
-//             Move move(i, j);
-//             if (checkMove(&move, side)) movesList.push_back(move);
-//         }
-//     }
-//     return movesList;
-// }
 
 CUDA_CALLABLE_MEMBER
 int DeviceBoard::countMoves(Side side) {

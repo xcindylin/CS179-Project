@@ -35,12 +35,10 @@ public:
     CUDA_CALLABLE_MEMBER ~DeviceBoard();
     char *black;
     char *taken;
-    CUDA_CALLABLE_MEMBER DeviceBoard *copy();
 
     CUDA_CALLABLE_MEMBER bool isDone();
     CUDA_CALLABLE_MEMBER bool hasMoves(Side side);
     CUDA_CALLABLE_MEMBER bool checkMove(Move *m, Side side);
-    // __device__ thrust::device_vector<Move> getMoves(Side side);
     CUDA_CALLABLE_MEMBER int countMoves(Side side);
     CUDA_CALLABLE_MEMBER void doMove(Move *m, Side side);
     CUDA_CALLABLE_MEMBER int count(Side side);

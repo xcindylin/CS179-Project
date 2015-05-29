@@ -4,7 +4,6 @@ GPUPlayer::GPUPlayer(Side side) {
     this->side = side;
     otherSide = side == BLACK ? WHITE : BLACK;
     board = new Board();
-
 }
 
 GPUPlayer::~GPUPlayer() {

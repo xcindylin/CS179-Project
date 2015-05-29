@@ -20,15 +20,6 @@ ParallelDecisionTree::~ParallelDecisionTree() {
     // free some stuff
 }
 
-// DeviceBoard *ParallelDecisionTree::HostToDeviceBoard(Board *board) {
-//     DeviceBoard *newDeviceBoard = new DeviceBoard();
-//     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-//         newDeviceBoard->black[i] = board->black[i];
-//         newDeviceBoard->taken[i] = board->taken[i];
-//     }
-//     return newDeviceBoard;
-// }
-
 Node *ParallelDecisionTree::getRoot() {
     return root;
 }
@@ -109,11 +100,6 @@ Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
 
     // copy remaining child values into host array
     gpuErrchk(cudaMemcpy(values + 1, dev_values, numMoves * sizeof(int), cudaMemcpyDeviceToHost));
-
-    cout << "depth: " << depth << endl;
-    for (int i = 0; i <= numMoves; i++) {
-        cout << values[i] << endl;
-    }
 
     // find the best move
     int index = 0;

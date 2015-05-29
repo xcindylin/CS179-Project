@@ -43,7 +43,6 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
                 }
 
                 delete child;
-
                 if (node->getAlpha() >= node->getBeta()) {
                     return;
                 }
@@ -51,34 +50,6 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
             delete move;
         }
     }
-
-    // thrust::device_vector<Move> moves = board->getMoves(oppositeSide);
-    // for (int i = 0; i < moves.size(); i++) {
-    //     // create the next child
-    //     Move *move = new Move(moves[i].getX(), moves[i].getY());
-    //     DeviceBoard *newBoard = board->copy();
-    //     newBoard->doMove(move, oppositeSide);
-    //     DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
-
-    //     // pass alpha and beta values down
-    //     child->setAlpha(node->getAlpha());
-    //     child->setBeta(node->getBeta());
-
-    //     // search child
-    //     cudaSearch(child, oppositeSide, maximizer, depth - 1);
-
-    //     if (side == maximizer) {
-    //         node->setBeta(min(node->getBeta(), child->getAlpha()));
-    //     } else {
-    //         node->setAlpha(max(node->getAlpha(), child->getBeta()));
-    //     }
-
-    //     delete child;
-
-    //     if (node->getAlpha() >= node->getBeta()) {
-    //         return;
-    //     }
-    // }
 }
 
 __global__
@@ -106,15 +77,14 @@ void cudaTreeKernel(Move *moves, char *black, char *taken, int *values, Side sid
         } else {
             values[blockIdx.x] = node->getAlpha();
         }
-        printf("values: %d index: %d\n", values[blockIdx.x], blockIdx.x);
-    }
 
+        delete node;
+        delete move;
+    }
 }
 
 void cudaCallTreeKernel(Move *moves, char *black, char *taken, int *values, Side side, 
     Side maximizer, int alpha, int beta, int numMoves, int depth) {
-
-    printf("hello...\n");
 
     cudaTreeKernel<<<numMoves, 64>>>(moves, black, taken, values, side, 
        maximizer, alpha, beta, depth);
