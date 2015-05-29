@@ -48,6 +48,7 @@ void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
                     return;
                 }
             }
+            delete move;
         }
     }
 
