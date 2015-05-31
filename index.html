@@ -16,7 +16,7 @@
       <a href="https://github.com/xcindylin/CS179-Project" class="btn">View on GitHub</a>
       <a href="https://github.com/xcindylin/CS179-Project/zipball/master" class="btn">Download .zip</a>
       <a href="https://github.com/xcindylin/CS179-Project/tarball/master" class="btn">Download .tar.gz</a>
-      <p></p>
+      <p>Quick Navigation:</p>
       <h4 class="project-tagline"></h4>
       <a href="http://xcindylin.github.io/CS179-Project/#gpu-speedup" class="btn">GPU Speedup</a>
     </section>
@@ -110,7 +110,21 @@
       </code></pre>
 
       <h5>Board Size: 8 x 8 (Depth 5)</h5>
-      <pre><code>
+      <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 56
+      White score: 7
+      
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 49
+      White score: 15
+
+      CPU time: 8917.39 milliseconds
+      GPU time: 6943.18 milliseconds
+      Speedup factor: 1.28434
+      </code></pre>
 
       <h5>Board Size: 32 x 32 (Depth 1)</h5>
       <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
