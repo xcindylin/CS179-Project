@@ -16,7 +16,7 @@ Move *Player::doMove(Move *opponentsMove) {
         return NULL;
     }
     DecisionTree *tree = new DecisionTree(board, side);
-    Move *moveToMake = tree->findBestMove(4);
+    Move *moveToMake = tree->findBestMove(2);
     board->doMove(moveToMake, side);
     return moveToMake;
 }

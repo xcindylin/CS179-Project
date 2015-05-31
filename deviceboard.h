@@ -25,8 +25,6 @@ using namespace std;
 class DeviceBoard {
    
 private:
-    CUDA_CALLABLE_MEMBER bool occupied(int x, int y);
-    CUDA_CALLABLE_MEMBER bool get(Side side, int x, int y);
     CUDA_CALLABLE_MEMBER void set(Side side, int x, int y);
     CUDA_CALLABLE_MEMBER bool onBoard(int x, int y);
       
@@ -36,6 +34,8 @@ public:
     char *black;
     char *taken;
 
+    CUDA_CALLABLE_MEMBER bool occupied(int x, int y);
+    CUDA_CALLABLE_MEMBER bool get(Side side, int x, int y);
     CUDA_CALLABLE_MEMBER bool isDone();
     CUDA_CALLABLE_MEMBER bool hasMoves(Side side);
     CUDA_CALLABLE_MEMBER bool checkMove(Move *m, Side side);
