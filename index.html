@@ -16,6 +16,9 @@
       <a href="https://github.com/xcindylin/CS179-Project" class="btn">View on GitHub</a>
       <a href="https://github.com/xcindylin/CS179-Project/zipball/master" class="btn">Download .zip</a>
       <a href="https://github.com/xcindylin/CS179-Project/tarball/master" class="btn">Download .tar.gz</a>
+      <p></p>
+      <h4 class="project-tagline"></h4>
+      <a href="http://xcindylin.github.io/CS179-Project/#gpu-speedup" class="btn">GPU Speedup</a>
     </section>
 
     <section class="main-content">
@@ -36,6 +39,78 @@
       <p>Each game was played with the following players:</p>
       <p>CPU: ExamplePlayer (White) vs. Player (Black)</p>
       <p>GPU: ExamplePLayer (White) vs. GPUPlayer (Black)</p>
+
+      <h5>Board Size: 8 x 8 (Depth 1)</h5>
+      <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 45
+      White score: 19
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 41
+      White score: 23
+
+      CPU time: 4.41699 milliseconds
+      GPU time: 15.7204 milliseconds
+      Speedup factor: 0.280971
+      </code></pre>
+
+      <h5>Board Size: 8 x 8 (Depth 2)</h5>
+      <pre><code>
+      xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 33
+      White score: 0
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 46
+      White score: 0
+
+      CPU time: 16.0288 milliseconds
+      GPU time: 64.8637 milliseconds
+      Speedup factor: 0.247115
+      </code></pre>
+
+      <h5>Board Size: 8 x 8 (Depth 3)</h5>
+      <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 45
+      White score: 19
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 45
+      White score: 19
+
+      CPU time: 140.294 milliseconds
+      GPU time: 346.135 milliseconds
+      Speedup factor: 0.405315
+      </code></pre>
+
+      <h5>Board Size: 8 x 8 (Depth 4)</h5>
+      <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 54
+      White score: 10
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 51
+      White score: 13
+
+      CPU time: 893.301 milliseconds
+      GPU time: 1138 milliseconds
+      Speedup factor: 0.784973
+      </code></pre>
+
+      <h5>Board Size: 8 x 8 (Depth 5)</h5>
+      <pre><code>
 
       <h5>Board Size: 32 x 32 (Depth 1)</h5>
       <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
