@@ -13,7 +13,6 @@ private:
 	Move *move;
 	Side side; // the side that made the move leading to this node
 	Side maximizer; // our side - maximizing side
-	int score;
 	int alpha;
 	int beta;
 	Node *parent;
@@ -27,7 +26,6 @@ public:
 	Side getSide();
 	Node *getParent();
 	void setParent(Node *node);
-	int getScore();
 	int getAlpha();
 	int getBeta();
 	void setAlpha(int alpha);
