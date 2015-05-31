@@ -37,8 +37,8 @@
       <h3>
       <a id="gpu-speedup" class="anchor" href="#gpu-speedup" aria-hidden="true"><span class="octicon octicon-link"></span></a>GPU Speedup</h3>
       <p>Each game was played with the following players:</p>
-      <p>CPU: ExamplePlayer (White) vs. Player (Black)</p>
-      <p>GPU: ExamplePLayer (White) vs. GPUPlayer (Black)</p>
+      <br>CPU: ExamplePlayer (White) vs. Player (Black)
+      <br>GPU: ExamplePLayer (White) vs. GPUPlayer (Black)
 
       <h5>Board Size: 8 x 8 (Depth 1)</h5>
       <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
@@ -115,7 +115,7 @@
       CPU Game completed.
       Black score: 56
       White score: 7
-      
+
       Starting GPU game...
       GPU Game completed.
       Black score: 49
@@ -124,6 +124,23 @@
       CPU time: 8917.39 milliseconds
       GPU time: 6943.18 milliseconds
       Speedup factor: 1.28434
+      </code></pre>
+
+      <h5>Board Size: 8 x 8 (Depth 6)</h5>
+      <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 37
+      White score: 0
+      
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 55
+      White score: 2
+
+      CPU time: 49493.2 milliseconds
+      GPU time: 12971.8 milliseconds
+      Speedup factor: 3.81546
       </code></pre>
 
       <h5>Board Size: 32 x 32 (Depth 1)</h5>
