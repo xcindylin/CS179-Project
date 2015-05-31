@@ -32,6 +32,29 @@
       <p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
 
       <h3>
+      <a id="gpu-speedup" class="anchor" href="#gpu-speedup" aria-hidden="true"><span class="octicon octicon-link"></span></a>GPU Speedup</h3>
+      <p>Each game was played with the following players:</p>
+      <p>CPU: ExamplePlayer (White) vs. Player (Black)</p>
+      <p>GPU: ExamplePLayer (White) vs. GPUPlayer (Black)</p>
+
+      <h5>Board Size: 32 x 32 (Depth 1)</h5>
+      <pre><code>xlin@haru:~/CS179-Project$ ./testgame 
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 586
+      White score: 438
+      
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 488
+      White score: 536
+
+      CPU time: 5634.61 milliseconds
+      GPU time: 2075.59 milliseconds
+      Speedup factor: 2.7147
+      </code></pre>
+
+      <h3>
       <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
       <p>Alexandra Cong (<a href="https://github.com/a-cong" class="user-mention">@a-cong</a>) and Cindy Lin (<a href="https://github.com/xcindylin" class="user-mention">@xcindylin</a>)</p>
