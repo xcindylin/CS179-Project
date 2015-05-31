@@ -1,8 +1,8 @@
 #include <cstdio>
 #include "tree_cuda.cuh"
 
- __global__
-void cudaCountMovesKernel(DeviceBoard *board, Side side, int score) {
+__global__
+void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
 
     while (index < BOARD_SIZE * BOARD_SIZE) {
@@ -10,13 +10,13 @@ void cudaCountMovesKernel(DeviceBoard *board, Side side, int score) {
         int y = index / BOARD_SIZE;
         Move *move = new Move(x, y);
         if (board->checkMove(move, side)) {
-            atomicAdd(&score, 1);
+            atomicAdd(score, 1);
         }
     }
 }
 
 __global__
-void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int score) {
+void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
     bool frontier = false;
 
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
@@ -60,11 +60,11 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int score) {
             if (frontier) {
                 if (board->get(maximizer, x, y)) {
                     // add to the score if maximizer is in the frontier
-                    atomicAdd(&score, -1);
+                    atomicAdd(score, -1);
                 } else {
                     // subtract from the score if the minimizer is in
                     // the frontier
-                    atomicAdd(&score, 1);
+                    atomicAdd(score, 1);
                 }
             }
         }
@@ -189,16 +189,22 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
         }
     }
 
-    int maximizerMovesScore = 0;
-    int minimizerMovesScore = 0;
-    int frontierScore = 0;
+    int *maximizerMovesScore;
+    int *minimizerMovesScore;
+    int *frontierScore;
+    maximizerMovesScore = (int *) malloc(sizeof(int));
+    minimizerMovesScore = (int *) malloc(sizeof(int));
+    frontierScore = (int *) malloc(sizeof(int));
+    *maximizerMovesScore = 0;
+    *minimizerMovesScore = 0;
+    *frontierScore = 0;
 
     cudaCountMovesKernel<<<8, 64>>>(board, maximizer, maximizerMovesScore);
     cudaCountMovesKernel<<<8, 64>>>(board, minimizer, minimizerMovesScore);
     cudaGetFrontierScore<<<8, 64>>>(board, maximizer, frontierScore);
 
-    score += MOVES_WEIGHT * (maximizerMovesScore - minimizerMovesScore);
-    score += FRONTIER_WEIGHT * frontierScore;
+    score += MOVES_WEIGHT * (*maximizerMovesScore - *minimizerMovesScore);
+    score += FRONTIER_WEIGHT * (*frontierScore);
 
     return score;
  }
@@ -237,6 +243,6 @@ void cudaTreeKernel(Move *moves, char *black, char *taken, int *values, Side sid
 void cudaCallTreeKernel(Move *moves, char *black, char *taken, int *values, Side side, 
     Side maximizer, int alpha, int beta, int numMoves, int depth) {
 
-    cudaTreeKernel<<<numMoves, 64>>>(moves, black, taken, values, side, 
+    cudaTreeKernel<<<numMoves, 32>>>(moves, black, taken, values, side, 
        maximizer, alpha, beta, depth);
 }

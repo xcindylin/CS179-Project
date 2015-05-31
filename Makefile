@@ -8,7 +8,7 @@ CUDA_BIN_PATH   ?= $(CUDA_PATH)/bin
 CUDA_LIB_PATH   ?= $(CUDA_PATH)/lib64
 
 # CUDA code generation flags
-GENCODE_FLAGS   := -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35
+GENCODE_FLAGS   := -gencode arch=compute_35,code=sm_35
 
 # Common binaries
 NVCC            ?= $(CUDA_BIN_PATH)/nvcc
@@ -58,10 +58,10 @@ testgame.o: testgame.cpp
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 link.o:
-	$(NVCC) -dlink $(GENCODE_FLAGS) gpuplayer.o paralleldecisiontree.o tree_cuda.o deviceboard.o devicenode.o testgame.o -o $@
+	$(NVCC) $(NVCCFLAGS) -dlink $(GENCODE_FLAGS) gpuplayer.o paralleldecisiontree.o tree_cuda.o deviceboard.o devicenode.o testgame.o -o $@
 
 testgame: testgame.o $(OBJS) link.o
-	$(CC) $(CCFLAGS) -o $@ $+ $(LDFLAGS)
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LDFLAGS)
 
 clean:
 	rm -f *.o $(TARGETS)
