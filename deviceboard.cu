@@ -7,18 +7,6 @@ CUDA_CALLABLE_MEMBER
 DeviceBoard::DeviceBoard(char *black, char *taken) {
     this->black = black;
     this->taken = taken;
-    // taken.set(7 + BOARD_SIZE * 7);
-    taken[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
-    // taken.set(7 + BOARD_SIZE * 8);
-    taken[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2)] = 1;
-    // taken.set(8 + BOARD_SIZE * 7);
-    taken[(BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
-    // taken.set(8 + BOARD_SIZE * 8);
-    taken[(BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2)] = 1;
-    // black.set(8 + BOARD_SIZE * 7);
-    black[(BOARD_SIZE/2) + BOARD_SIZE * (BOARD_SIZE/2 - 1)] = 1;
-    // black.set(7 + BOARD_SIZE * 8);
-    black[(BOARD_SIZE/2 - 1) + BOARD_SIZE * (BOARD_SIZE/2)] = 1;
 }
 
 /*

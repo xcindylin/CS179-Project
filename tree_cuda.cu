@@ -217,7 +217,18 @@ void cudaTreeKernel(Move *moves, char *black, char *taken, int *values, Side sid
         // make one new node per block
         Move *move = new Move(moves[blockIdx.x].getX(), moves[blockIdx.x].getY());
 
-        DeviceBoard *newBoard = new DeviceBoard(black, taken);
+        char *new_black;
+        char *new_taken;
+
+        new_black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+        new_taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+
+        for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+            new_black[i] = black[i];
+            new_taken[i] = taken[i];
+        }
+
+        DeviceBoard *newBoard = new DeviceBoard(new_black, new_taken);
         newBoard->doMove(move, side);
         DeviceNode *node = new DeviceNode(move, side, maximizer, newBoard);
 
