@@ -8,6 +8,7 @@
 #endif
 
 #define BOARD_SIZE 16
+#define DEPTH 2
 
 enum Side { 
     BLACK, WHITE
