@@ -12,6 +12,9 @@ void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
         if (board->checkMove(move, side)) {
             atomicAdd(score, 1);
         }
+
+        delete move;
+        index += blockDim.x * gridDim.x;
     }
 }
 
@@ -24,18 +27,22 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
     while (index < BOARD_SIZE * BOARD_SIZE) {
         // first row, second column to column before the last column
         if ( (index > 0) && (index < BOARD_SIZE-1) ) {
+            index += blockDim.x * gridDim.x;
             continue;
         }
         // last row, second column to column before the last column
         if ( (index > (BOARD_SIZE-1)*BOARD_SIZE) && (index < BOARD_SIZE*BOARD_SIZE-1) ) {
+            index += blockDim.x * gridDim.x;
             continue;
         }
         // first column of board
         if (index % BOARD_SIZE == 0) {
+            index += blockDim.x * gridDim.x;
             continue;
         }
        // last column of board
-        if ( (index+1) & BOARD_SIZE == 0) {
+        if ( (index+1) % BOARD_SIZE == 0) {
+            index += blockDim.x * gridDim.x;
             continue;
         }
 
@@ -61,66 +68,17 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
                 if (board->get(maximizer, x, y)) {
                     // add to the score if maximizer is in the frontier
                     atomicAdd(score, -1);
-                } else {
+                } 
+                else {
                     // subtract from the score if the minimizer is in
                     // the frontier
                     atomicAdd(score, 1);
                 }
             }
         }
+
         frontier = false;
-    }
-}
-
-__device__ 
-void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
-    DeviceBoard *board = node->getBoard();
-    Side oppositeSide = side == BLACK ? WHITE : BLACK;
-    
-    if (depth == 0) {
-       node->setAlpha(node->getScore());
-       node->setBeta(node->getScore());
-       return;
-    }
-
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            Move *move = new Move(i, j);
-            if (board->checkMove(move, oppositeSide)) {
-                char *black;
-                char *taken;
-
-                black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
-                taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
-
-                for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-                    black[i] = board->black[i];
-                    taken[i] = board->taken[i];
-                }
-                DeviceBoard *newBoard = new DeviceBoard(black, taken);
-                newBoard->doMove(move, oppositeSide);
-                DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
-
-                // pass alpha and beta values down
-                child->setAlpha(node->getAlpha());
-                child->setBeta(node->getBeta());
-
-                // search child
-                cudaSearch(child, oppositeSide, maximizer, depth - 1);
-
-                if (side == maximizer) {
-                    node->setBeta(min(node->getBeta(), child->getAlpha()));
-                } else {
-                    node->setAlpha(max(node->getAlpha(), child->getBeta()));
-                }
-
-                delete child;
-                if (node->getAlpha() >= node->getBeta()) {
-                    return;
-                }
-            }
-            delete move;
-        }
+        index += blockDim.x * gridDim.x;
     }
 }
 
@@ -199,15 +157,77 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
     *minimizerMovesScore = 0;
     *frontierScore = 0;
 
-    cudaCountMovesKernel<<<8, 64>>>(board, maximizer, maximizerMovesScore);
-    cudaCountMovesKernel<<<8, 64>>>(board, minimizer, minimizerMovesScore);
-    cudaGetFrontierScore<<<8, 64>>>(board, maximizer, frontierScore);
+    cudaCountMovesKernel<<<2, 64>>>(board, maximizer, maximizerMovesScore);
+    cudaDeviceSynchronize();
+
+    cudaCountMovesKernel<<<2, 64>>>(board, minimizer, minimizerMovesScore);
+    cudaDeviceSynchronize();
+
+    cudaGetFrontierScore<<<2, 64>>>(board, maximizer, frontierScore);
+    cudaDeviceSynchronize();
 
     score += MOVES_WEIGHT * (*maximizerMovesScore - *minimizerMovesScore);
     score += FRONTIER_WEIGHT * (*frontierScore);
 
+    free(maximizerMovesScore);
+    free(minimizerMovesScore);
+    free(frontierScore);
+
     return score;
  }
+
+__device__ 
+void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
+    DeviceBoard *board = node->getBoard();
+    Side oppositeSide = side == BLACK ? WHITE : BLACK;
+    
+    if (depth == 0) {
+        int score = cudaGetScore(board, maximizer);
+        node->setAlpha(score);
+        node->setBeta(score);
+        return;
+    }
+
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            Move *move = new Move(i, j);
+            if (board->checkMove(move, oppositeSide)) {
+                char *black;
+                char *taken;
+
+                black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+                taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
+
+                for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+                    black[i] = board->black[i];
+                    taken[i] = board->taken[i];
+                }
+                DeviceBoard *newBoard = new DeviceBoard(black, taken);
+                newBoard->doMove(move, oppositeSide);
+                DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
+
+                // pass alpha and beta values down
+                child->setAlpha(node->getAlpha());
+                child->setBeta(node->getBeta());
+
+                // search child
+                cudaSearch(child, oppositeSide, maximizer, depth - 1);
+
+                if (side == maximizer) {
+                    node->setBeta(min(node->getBeta(), child->getAlpha()));
+                } else {
+                    node->setAlpha(max(node->getAlpha(), child->getBeta()));
+                }
+
+                delete child;
+                if (node->getAlpha() >= node->getBeta()) {
+                    return;
+                }
+            }
+            delete move;
+        }
+    }
+}
 
 __global__
 void cudaTreeKernel(Move *moves, char *black, char *taken, int *values, Side side, 
