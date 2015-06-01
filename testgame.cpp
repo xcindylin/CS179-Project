@@ -47,8 +47,8 @@ float gpu_ms = -1;
 
 int main() {
 	Board *board = new Board();
-	ExamplePlayer *player1 = new ExamplePlayer(BLACK);
-	Player *player2 = new Player(WHITE);
+    Player *player1 = new Player(BLACK);
+	ExamplePlayer *player2 = new ExamplePlayer(WHITE);
 
     Side turn = BLACK;
     Move *m = NULL;
@@ -86,19 +86,19 @@ int main() {
     cout << "White score: " << board->countWhite() << endl;
 
     // Run game on GPU here
-    ExamplePlayer *player3 = new ExamplePlayer(WHITE);
-    GPUPlayer *player4 = new GPUPlayer(BLACK);
+    GPUPlayer *player3 = new GPUPlayer(BLACK);
+    ExamplePlayer *player4 = new ExamplePlayer(WHITE);
 
     board = new Board();
 
     turn = BLACK;
     m = NULL;
 
-    cout << "Starting GPU game..." << endl;
+    cout << endl << "Starting GPU game..." << endl;
     START_TIMER();
     while (!board->isDone()) {
         // get the current player's move
-        if (turn == WHITE) {
+        if (turn == BLACK) {
             m = player3->doMove(m);
         }
         else { 
