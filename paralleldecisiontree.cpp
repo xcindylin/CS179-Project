@@ -26,8 +26,8 @@ Node *ParallelDecisionTree::getRoot() {
 
 Move *ParallelDecisionTree::search(Node *startingNode, int depth) {
 	if (depth == 0) {
-		startingNode->setAlpha(startingNode->getScore());
-		startingNode->setBeta(startingNode->getScore());
+		startingNode->setAlpha(startingNode->getBoard()->getScore(maximizer));
+		startingNode->setBeta(startingNode->getBoard()->getScore(maximizer));
 		return NULL;
 	}
 	Board *board = startingNode->getBoard();

@@ -5,7 +5,6 @@ Node::Node(Move *move, Side side, Side maximizer, Board *board) {
 	this->side = side;
 	this->maximizer = maximizer;
 	this->board = board;
-	this->score = board->getScore(maximizer);
 	this->alpha = -99999999;
 	this->beta = 99999999;
 }
@@ -33,10 +32,6 @@ Node *Node::getParent() {
 
 void Node::setParent(Node *node) {
 	parent = node;
-}
-
-int Node::getScore() {
-    return score;
 }
 
 int Node::getAlpha() {
