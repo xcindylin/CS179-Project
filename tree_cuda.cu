@@ -85,6 +85,22 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
 __device__
 int cudaGetScore(DeviceBoard *board, Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
+    
+    int *maximizerMovesScore;
+    int *minimizerMovesScore;
+    int *frontierScore;
+    maximizerMovesScore = (int *) malloc(sizeof(int));
+    minimizerMovesScore = (int *) malloc(sizeof(int));
+    frontierScore = (int *) malloc(sizeof(int));
+    *maximizerMovesScore = 0;
+    *minimizerMovesScore = 0;
+    *frontierScore = 0;
+
+    cudaCountMovesKernel<<<2, 64>>>(board, maximizer, maximizerMovesScore);
+    cudaCountMovesKernel<<<2, 64>>>(board, minimizer, minimizerMovesScore);
+    cudaGetFrontierScore<<<2, 64>>>(board, maximizer, frontierScore);
+    cudaDeviceSynchronize();
+
     int score;
 
     if (maximizer == BLACK) {
@@ -146,25 +162,6 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
             score += EDGE_WEIGHT * board->boolToInt(board->get(maximizer, x, y));
         }
     }
-
-    int *maximizerMovesScore;
-    int *minimizerMovesScore;
-    int *frontierScore;
-    maximizerMovesScore = (int *) malloc(sizeof(int));
-    minimizerMovesScore = (int *) malloc(sizeof(int));
-    frontierScore = (int *) malloc(sizeof(int));
-    *maximizerMovesScore = 0;
-    *minimizerMovesScore = 0;
-    *frontierScore = 0;
-
-    cudaCountMovesKernel<<<2, 64>>>(board, maximizer, maximizerMovesScore);
-    cudaDeviceSynchronize();
-
-    cudaCountMovesKernel<<<2, 64>>>(board, minimizer, minimizerMovesScore);
-    cudaDeviceSynchronize();
-
-    cudaGetFrontierScore<<<2, 64>>>(board, maximizer, frontierScore);
-    cudaDeviceSynchronize();
 
     score += MOVES_WEIGHT * (*maximizerMovesScore - *minimizerMovesScore);
     score += FRONTIER_WEIGHT * (*frontierScore);
