@@ -47,8 +47,8 @@ float gpu_ms = -1;
 
 int main() {
 	Board *board = new Board();
-	ExamplePlayer *player1 = new ExamplePlayer(BLACK);
-	Player *player2 = new Player(WHITE);
+    Player *player1 = new Player(BLACK);
+	ExamplePlayer *player2 = new ExamplePlayer(WHITE);
 
     Side turn = BLACK;
     Move *m = NULL;
@@ -94,7 +94,7 @@ int main() {
     turn = BLACK;
     m = NULL;
 
-    cout << "Starting GPU game..." << endl;
+    cout << endl << "Starting GPU game..." << endl;
     START_TIMER();
     while (!board->isDone()) {
         // get the current player's move
