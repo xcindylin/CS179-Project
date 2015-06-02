@@ -33,7 +33,7 @@ void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
 }
 
 __global__
-void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {R
+void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
 
     bool frontier = false;
