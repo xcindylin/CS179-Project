@@ -47,52 +47,13 @@ float gpu_ms = -1;
 
 int main() {
 	Board *board = new Board();
-    Player *player1 = new Player(BLACK);
-	ExamplePlayer *player2 = new ExamplePlayer(WHITE);
-
-    Side turn = BLACK;
-    Move *m = NULL;
-
-    cout << "Starting CPU game..." << endl;
-    START_TIMER();
-    while (!board->isDone()) {
-    	// get the current player's move
-        if (turn == BLACK) {
-            m = player1->doMove(m);
-        }
-        else {  
-            m = player2->doMove(m);   
-        }
-
-    	if (!board->checkMove(m, turn)) {
-    		cout << "Illegal move made: " << turn << " address: " << m << endl;
-    	}
-
-    	// make move once it is determiend to be legal
-    	board->doMove(m, turn);
-
-    	// switch players
-    	if (turn == BLACK) {
-    		turn = WHITE;
-    	}
-    	else {
-    		turn = BLACK;
-    	}
-    }
-    STOP_RECORD_TIMER(cpu_ms);
-
-    cout << "CPU Game completed." << endl;
-    cout << "Black score: " << board->countBlack() << endl;
-    cout << "White score: " << board->countWhite() << endl;
 
     // Run game on GPU here
     GPUPlayer *player3 = new GPUPlayer(BLACK);
     ExamplePlayer *player4 = new ExamplePlayer(WHITE);
 
-    board = new Board();
-
-    turn = BLACK;
-    m = NULL;
+    Side turn = BLACK;
+    Move *m = NULL;
 
     cout << endl << "Starting GPU game..." << endl;
     START_TIMER();
@@ -123,6 +84,45 @@ int main() {
     STOP_RECORD_TIMER(gpu_ms);
 
     cout << "GPU Game completed." << endl;
+    cout << "Black score: " << board->countBlack() << endl;
+    cout << "White score: " << board->countWhite() << endl;
+
+    Player *player1 = new Player(BLACK);
+	ExamplePlayer *player2 = new ExamplePlayer(WHITE);
+
+    board = new Board();
+    turn = BLACK;
+    m = NULL;
+
+    cout << "Starting CPU game..." << endl;
+    START_TIMER();
+    while (!board->isDone()) {
+    	// get the current player's move
+        if (turn == BLACK) {
+            m = player1->doMove(m);
+        }
+        else {  
+            m = player2->doMove(m);   
+        }
+
+    	if (!board->checkMove(m, turn)) {
+    		cout << "Illegal move made: " << turn << " address: " << m << endl;
+    	}
+
+    	// make move once it is determiend to be legal
+    	board->doMove(m, turn);
+
+    	// switch players
+    	if (turn == BLACK) {
+    		turn = WHITE;
+    	}
+    	else {
+    		turn = BLACK;
+    	}
+    }
+    STOP_RECORD_TIMER(cpu_ms);
+
+    cout << "CPU Game completed." << endl;
     cout << "Black score: " << board->countBlack() << endl;
     cout << "White score: " << board->countWhite() << endl;
 

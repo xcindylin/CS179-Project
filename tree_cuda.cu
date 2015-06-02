@@ -28,7 +28,7 @@ void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
 
     sum = warpReduceSum(sum);
     if (threadIdx.x == 0) {
-        atomicAdd(score, sum);
+        *score = sum;
     }
 }
 
@@ -98,7 +98,7 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
 
     sum = warpReduceSum(sum);
     if (threadIdx.x == 0) {
-        atomicAdd(score, sum);
+        *score = sum;
     }
 }
 
@@ -116,10 +116,20 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
     *minimizerMovesScore = 0;
     *frontierScore = 0;
 
-    cudaCountMovesKernel<<<1, 32>>>(board, maximizer, maximizerMovesScore);
-    cudaCountMovesKernel<<<1, 32>>>(board, minimizer, minimizerMovesScore);
-    cudaGetFrontierScore<<<1, 32>>>(board, maximizer, frontierScore);
+    cudaStream_t s1;
+    cudaStream_t s2;
+    cudaStream_t s3;
+    cudaStreamCreateWithFlags(&s1, cudaStreamNonBlocking);
+    cudaStreamCreateWithFlags(&s2, cudaStreamNonBlocking);
+    cudaStreamCreateWithFlags(&s3, cudaStreamNonBlocking);
+
+    cudaCountMovesKernel<<<1, 32, 0, s1>>>(board, maximizer, maximizerMovesScore);
+    cudaCountMovesKernel<<<1, 32, 0, s2>>>(board, minimizer, minimizerMovesScore);
+    cudaGetFrontierScore<<<1, 32, 0, s3>>>(board, maximizer, frontierScore);
     cudaDeviceSynchronize();
+    cudaStreamDestroy(s1);
+    cudaStreamDestroy(s2);
+    cudaStreamDestroy(s3);
 
     int score;
 
