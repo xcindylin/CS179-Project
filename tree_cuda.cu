@@ -1,28 +1,43 @@
 #include <cstdio>
 #include "tree_cuda.cuh"
 
+//http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
+__inline__ __device__
+int warpReduceSum(int val) {
+  for (int offset = warpSize/2; offset > 0; offset /= 2) 
+    val += __shfl_down(val, offset);
+  return val;
+}
+
 __global__
 void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+    int sum = 0;
 
     while (index < BOARD_SIZE * BOARD_SIZE) {
         int x = index % BOARD_SIZE;
         int y = index / BOARD_SIZE;
         Move *move = new Move(x, y);
         if (board->checkMove(move, side)) {
-            atomicAdd(score, 1);
+            sum += 1;
         }
 
         delete move;
         index += blockDim.x * gridDim.x;
     }
+
+    sum = warpReduceSum(sum);
+    if (threadIdx.x == 0) {
+        atomicAdd(score, sum);
+    }
 }
 
 __global__
-void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
-    bool frontier = false;
-
+void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {R
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+    bool frontier = false;
+    int sum = 0;
 
     while (index < BOARD_SIZE * BOARD_SIZE) {
         // first row, second column to column before the last column
@@ -67,18 +82,23 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
             if (frontier) {
                 if (board->get(maximizer, x, y)) {
                     // add to the score if maximizer is in the frontier
-                    atomicAdd(score, -1);
+                    sum -= 1;
                 } 
                 else {
                     // subtract from the score if the minimizer is in
                     // the frontier
-                    atomicAdd(score, 1);
+                    sum += 1;
                 }
             }
         }
 
         frontier = false;
         index += blockDim.x * gridDim.x;
+    }
+
+    sum = warpReduceSum(sum);
+    if (threadIdx.x == 0) {
+        atomicAdd(score, sum);
     }
 }
 
@@ -96,9 +116,9 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
     *minimizerMovesScore = 0;
     *frontierScore = 0;
 
-    cudaCountMovesKernel<<<2, 64>>>(board, maximizer, maximizerMovesScore);
-    cudaCountMovesKernel<<<2, 64>>>(board, minimizer, minimizerMovesScore);
-    cudaGetFrontierScore<<<2, 64>>>(board, maximizer, frontierScore);
+    cudaCountMovesKernel<<<1, 32>>>(board, maximizer, maximizerMovesScore);
+    cudaCountMovesKernel<<<1, 32>>>(board, minimizer, minimizerMovesScore);
+    cudaGetFrontierScore<<<1, 32>>>(board, maximizer, frontierScore);
     cudaDeviceSynchronize();
 
     int score;
