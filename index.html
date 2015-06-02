@@ -36,13 +36,13 @@
 
       <h2>
       <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
-      We decided to parallelize the alpha-beta pruning algorithm specifically for playing Othello.
+      <p>We decided to parallelize the alpha-beta pruning algorithm specifically for playing Othello.</p>
 
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
       <h2>
       <a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h2>
-      Games like Othello, Chess, and Go have not yet been solved due to their high complexity, and in addition most decision trees used to play these games cannot search to very high depths because of the games’ high branching factors. The <a href="http://en.wikipedia.org/wiki/Minimax">minimax algorithm</a>, which generates a complete decision tree down to a specified depth, is an example of one such algorithm. <a href="http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">Alpha-beta pruning</a> is a technique built on top of minimax that is used to minimize the number of branches to be searched by determining which branches will have no effect on the outcome anyway, and “pruning” these away. Even with alpha-beta pruning, though, search depths are still very limited, as the time needed to run the algorithm increases by approximately one order of magnitude for every 1-level increase in depth. Thus, we thought that it might be interesting to see if we could parallelize the algorithm to make it run faster. Because the decision tree generated is huge and has many nodes to search through, dividing up the work between multiple threads seemed like a promising way to speed up the computation.
+      <p>Games like Othello, Chess, and Go have not yet been solved due to their high complexity, and in addition most decision trees used to play these games cannot search to very high depths because of the games’ high branching factors. The <a href="http://en.wikipedia.org/wiki/Minimax">minimax algorithm</a>, which generates a complete decision tree down to a specified depth, is an example of one such algorithm. <a href="http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">Alpha-beta pruning</a> is a technique built on top of minimax that is used to minimize the number of branches to be searched by determining which branches will have no effect on the outcome anyway, and “pruning” these away. Even with alpha-beta pruning, though, search depths are still very limited, as the time needed to run the algorithm increases by approximately one order of magnitude for every 1-level increase in depth. Thus, we thought that it might be interesting to see if we could parallelize the algorithm to make it run faster. Because the decision tree generated is huge and has many nodes to search through, dividing up the work between multiple threads seemed like a promising way to speed up the computation.</p>
 
       <p>However, there are aspects to alpha-beta pruning that pose particular challenges to parallelization on the GPU. The search is performed depth-first, and results from earlier branches are used to determine whether later ones should be examined or not. Parallelizing necessarily sacrifices some of this information, since if we want to search multiple branches in parallel those branches don’t have the bounds from each other to work with. Because of this, we may actually end up searching branches that would’ve been pruned in the serialized version. In theory, a thread searching one branch could update the other threads with its bounds when it finishes, but in practice this is difficult to implement on the GPU as it would require blocks to be able to break other blocks out of recursive function calls.</p>
 
@@ -51,8 +51,9 @@
       <h2>
       <a id="gpu-speedup" class="anchor" href="#gpu-speedup" aria-hidden="true"><span class="octicon octicon-link"></span></a>GPU Speedup</h2>
       <p>Each game was played with the following players:</p>
-      CPU: Player (Black) vs. ExamplePlayer (White)
-      <br>GPU: GPUPlayer (Black) vs. ExamplePlayer (White) 
+      
+      <p>CPU: Player (Black) vs. ExamplePlayer (White)
+      <br>GPU: GPUPlayer (Black) vs. ExamplePlayer (White)</p>
 
       <h5>Board Size: 8 x 8 (Depth 1)</h5>
       <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
