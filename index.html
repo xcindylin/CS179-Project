@@ -57,7 +57,7 @@
 
       <p>We then moved on to parallelizing the algorithm. The first thing we had to decide was how to parallelize the depth-first search of the decision tree. We chose to start with the PV-split algorithm, and then optimize on top of it.</p>
 
-      <img src="PVSplit.png">
+      <img src="PVSplit.png" height="400" width="400" align="middle">
 
       <p>The PV-split algorithm works by first searching down one branch of the tree on the CPU, and then parallelizing the remaining nodes to be searched on the GPU. This allows the GPU branches to use the bounds from the first CPU-searched branch. Our first attempt to get a working parallel algorithm involved using one block of threads per child node, and then searching down the subtree rooted at that child node with the block. The results from this are summarized in the chart and graph below.</p>
 
