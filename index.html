@@ -74,22 +74,7 @@
       <h5>Dynamic Parallelism of Scoring Game Boards</h5>
       <p>Please see the <a href="https://github.com/xcindylin/CS179-Project/tree/dynamic">dynamic</a> branch of our Github repo.</p>
 
-      <p>One optimization we implemented was using <a href="http://devblogs.nvidia.com/parallelforall/introduction-cuda-dynamic-parallelism/">dynamic parallelism</a> for scoring the game board of a given node. We followed the approach of the serialized version with the exception of the countMoves and getFrontierScore functions which have been replaced by kernels. For example, the following shows the replacement of the countMoves function:</p>
-
-      <pre><code>
-      int DeviceBoard::countMoves(Side side) {
-          int count = 0;
-          for (int i = 0; i < BOARD_SIZE; i++) {
-              for (int j = 0; j < BOARD_SIZE; j++) {
-                  Move move(i, j);
-                  if (checkMove(&move, side)) count++;
-              }
-          }
-          return count;
-      }
-      </code></pre>
-
-      <p>by the cudaCountMovesKernel kernel:</p>
+      <p>One optimization we implemented was using <a href="http://devblogs.nvidia.com/parallelforall/introduction-cuda-dynamic-parallelism/">dynamic parallelism</a> for scoring the game board of a given node. We followed the approach of the serialized version with the exception of the countMoves and getFrontierScore functions which have been replaced by kernels. For example, the following shows the replacement of the countMoves function (as shown above in the <a href="#approach">Approach</a> section) by the cudaCountMovesKernel kernel:</p>
 
       <pre><code>
       __global__
