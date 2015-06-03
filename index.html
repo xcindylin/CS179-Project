@@ -121,7 +121,7 @@
 
       <p>We found that the fully parallelized approach did in fact improve performance by approximately the expected amount. For instance, on a 32x32 board, for a depth 1 tree we got:</p>
 
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      <pre><code>> ./testgame
       Starting CPU game...
       CPU Game completed.
       Black score: 586
@@ -138,7 +138,7 @@
       </code></pre>
 
       <p>while for a depth 2 tree on the 32x32 board we got:</p>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      <pre><code>> ./testgame
       Starting CPU game...
       CPU Game completed.
       Black score: 842
@@ -158,7 +158,7 @@
 
       <p>However, this approach had some unexpected behavior which we’re still not sure how to explain. For depths 1 and 2 on a 16x16 board, the result of the game was the same as the CPU and naive GPU versions. When we tried to increase the depth to 3, though, suddenly the results became nondeterministic - for example, in one of the runs we got the following results:</p>
 
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      <pre><code>> ./testgame
       Starting CPU game...
       CPU Game completed.
       Black score: 202
@@ -176,7 +176,7 @@
 
       <p>and in another we got these:</p>
 
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      <pre><code>> ./testgame
       Starting CPU game...
       CPU Game completed.
       Black score: 202
@@ -220,7 +220,7 @@
       <br>GPU: GPUPlayer (Black) vs. ExamplePlayer (White)</p>
 
       <h5>Board Size: 8 x 8 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 45
@@ -237,7 +237,7 @@
       </code></pre>
 
       <h5>Board Size: 8 x 8 (Depth 2)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 33
@@ -254,7 +254,7 @@
       </code></pre>
 
       <h5>Board Size: 8 x 8 (Depth 3)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 45
@@ -271,7 +271,7 @@
       </code></pre>
 
       <h5>Board Size: 8 x 8 (Depth 4)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 54
@@ -288,7 +288,7 @@
       </code></pre>
 
       <h5>Board Size: 8 x 8 (Depth 5)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 56
@@ -305,7 +305,7 @@
       </code></pre>
 
       <h5>Board Size: 8 x 8 (Depth 6)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 37
@@ -322,7 +322,7 @@
       </code></pre>
 
       <h5>Board Size: 16 x 16 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 131
@@ -339,7 +339,7 @@
       </code></pre>
 
       <h5>Board Size: 16 x 16 (Depth 2)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 170
@@ -356,7 +356,7 @@
       </code></pre>
 
       <h5>Board Size: 16 x 16 (Depth 3)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 202
@@ -373,7 +373,7 @@
       </code></pre>
 
       <h5>Board Size: 32 x 32 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 586
@@ -390,7 +390,7 @@
       </code></pre>
 
       <h5>Board Size: 32 x 32 (Depth 2)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 842
@@ -407,7 +407,7 @@
       </code></pre>
 
       <h5>Board Size: 64 x 64 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting CPU game...
       CPU Game completed.
       Black score: 3230
@@ -428,7 +428,7 @@
       <h2>
       <a id="dynamic-speedup" class="anchor" href="#dynamic-speedup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dynamic Parallelism of Scoring GPU Times</h2>
       <h5>Board Size: 16 x 16 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting GPU game...
       GPU Game completed.
       Black score: 131
@@ -438,7 +438,7 @@
       </code></pre>
 
       <h5>Board Size: 16 x 16 (Depth 2)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting GPU game...
       GPU Game completed.
       Black score: 170
@@ -448,7 +448,7 @@
       </code></pre>
 
       <h5>Board Size: 16 x 16 (Depth 3)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting GPU game...
       GPU Game completed.
       Black score: 202
@@ -458,7 +458,7 @@
       </code></pre>
 
       <h5>Board Size: 32 x 32 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting GPU game...
       GPU Game completed.
       Black score: 586
@@ -468,7 +468,7 @@
       </code></pre>
 
       <h5>Board Size: 32 x 32 (Depth 2)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting GPU game...
       GPU Game completed.
       Black score: 842
@@ -478,7 +478,7 @@
       </code></pre>
 
       <h5>Board Size: 64 x 64 (Depth 1)</h5>
-      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame 
+      <pre><code>> ./testgame 
       Starting GPU game...
       GPU Game completed.
       Black score: 3230
