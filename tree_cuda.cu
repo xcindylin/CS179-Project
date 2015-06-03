@@ -32,13 +32,7 @@ bool onBoard(int x, int y) {
  * Returns true if a move is legal for the given side; false otherwise.
  */
 __device__
-bool checkMove(char *black, char *taken, Move *m, Side side) {
-    // Passing is only legal if you have no moves.
-    if (m == NULL) return true;
-    // if (m == NULL) return !hasMoves(black, taken, side);
-
-    int X = m->getX();
-    int Y = m->getY();
+bool checkMove(char *black, char *taken, int X, int Y, Side side) {
 
     // Make sure the square hasn't already been taken.
     if (occupied(taken, X, Y)) return false;
@@ -71,8 +65,7 @@ __device__
 bool hasMoves(char *black, char *taken, Side side) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            Move move(i,j);
-            if (checkMove(black, taken, &move, side)) return true;
+            if (checkMove(black, taken, i, j, side)) return true;
         }
     }
     return false;
@@ -93,8 +86,7 @@ int countMoves(char *black, char *taken, Side side) {
     int count = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            Move move(i, j);
-            if (checkMove(black, taken, &move, side)) count++;
+            if (checkMove(black, taken, i, j, side)) count++;
         }
     }
     return count;
@@ -104,15 +96,10 @@ int countMoves(char *black, char *taken, Side side) {
  * Modifies the board to reflect the specified move.
  */
 __device__
-void doMove(char *black, char *taken, Move *m, Side side) {
-    // A NULL move means pass.
-    if (m == NULL) return;
-
+void doMove(char *black, char *taken, int X, int Y, Side side) {
     // Ignore if move is invalid.
-    if (!checkMove(black, taken, m, side)) return;
+    if (!checkMove(black, taken, X, Y, side)) return;
 
-    int X = m->getX();
-    int Y = m->getY();
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -297,219 +284,11 @@ int getScore(char *black, char *taken, Side maximizer) {
     return score;
  }
 
-
-// __global__
-// void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
-//     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
-
-//     while (index < BOARD_SIZE * BOARD_SIZE) {
-//         int x = index % BOARD_SIZE;
-//         int y = index / BOARD_SIZE;
-//         Move *move = new Move(x, y);
-//         if (board->checkMove(move, side)) {
-//             atomicAdd(score, 1);
-//         }
-//     }
-// }
-
-// __global__
-// void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
-//     bool frontier = false;
-
-//     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
-
-//     while (index < BOARD_SIZE * BOARD_SIZE) {
-//         // first row, second column to column before the last column
-//         if ( (index > 0) && (index < BOARD_SIZE-1) ) {
-//             continue;
-//         }
-//         // last row, second column to column before the last column
-//         if ( (index > (BOARD_SIZE-1)*BOARD_SIZE) && (index < BOARD_SIZE*BOARD_SIZE-1) ) {
-//             continue;
-//         }
-//         // first column of board
-//         if (index % BOARD_SIZE == 0) {
-//             continue;
-//         }
-//        // last column of board
-//         if ( (index+1) & BOARD_SIZE == 0) {
-//             continue;
-//         }
-
-//         int x = index % BOARD_SIZE;
-//         int y = index / BOARD_SIZE;
-
-//         if (board->occupied(x, y)) {
-//             for (int dx = -1; dx <= 1; dx++) {
-//                 for (int dy = -1; dy <= 1; dy++) {
-//                     // continue since it's the current position
-//                     // being checked
-//                     if (dx == 0 && dy == 0) {
-//                         continue;
-//                     }
-//                     // set flag since we have found an unoccupied
-//                     // position surrounding the current position
-//                     if (!board->occupied(x+dx, y+dy)) {
-//                         frontier = true;
-//                     }
-//                 }
-//             }
-//             if (frontier) {
-//                 if (board->get(maximizer, x, y)) {
-//                     // add to the score if maximizer is in the frontier
-//                     atomicAdd(score, -1);
-//                 } else {
-//                     // subtract from the score if the minimizer is in
-//                     // the frontier
-//                     atomicAdd(score, 1);
-//                 }
-//             }
-//         }
-//         frontier = false;
-//     }
-// }
-
-__device__ 
-void cudaSearch(DeviceNode *node, Side side, Side maximizer, int depth) {
-    DeviceBoard *board = node->getBoard();
-    Side oppositeSide = side == BLACK ? WHITE : BLACK;
-    
-    if (depth == 0) {
-        node->setAlpha(board->getScore(maximizer));
-        node->setBeta(board->getScore(maximizer));
-        return;
-    }
-
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            Move *move = new Move(i, j);
-            if (board->checkMove(move, oppositeSide)) {
-                char *black;
-                char *taken;
-
-                black = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
-                taken = (char *) malloc(BOARD_SIZE * BOARD_SIZE * sizeof(char));
-
-                for (int k = 0; k < BOARD_SIZE * BOARD_SIZE; k++) {
-                    black[k] = board->black[k];
-                    taken[k] = board->taken[k];
-                }
-                DeviceBoard *newBoard = new DeviceBoard(black, taken);
-                newBoard->doMove(move, oppositeSide);
-                DeviceNode *child = new DeviceNode(move, oppositeSide, maximizer, newBoard);
-
-                // pass alpha and beta values down
-                child->setAlpha(node->getAlpha());
-                child->setBeta(node->getBeta());
-
-                // search child
-                cudaSearch(child, oppositeSide, maximizer, depth - 1);
-
-                if (side == maximizer) {
-                    node->setBeta(min(node->getBeta(), child->getAlpha()));
-                } else {
-                    node->setAlpha(max(node->getAlpha(), child->getBeta()));
-                }
-
-                delete child;
-                if (node->getAlpha() >= node->getBeta()) {
-                    return;
-                }
-            }
-            delete move;
-        }
-    }
-}
-
-// __device__
-// int cudaGetScore(DeviceBoard *board, Side maximizer) {
-//     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
-//     int score;
-
-//     if (maximizer == BLACK) {
-//         score = board->countBlack() - board->countWhite();
-//     } else {
-//         score = board->countWhite() - board->countBlack();
-//     }
-
-//     // update score by adding a positive weight if the maximizer has occupied a
-//     // corner or a negative weight if the minimizer has occupied a corner
-//     bool maxULCorner = board->get(maximizer, 0, 0);
-//     bool maxURCorner = board->get(maximizer, BOARD_SIZE-1, 0);
-//     bool maxLLCorner = board->get(maximizer, 0, BOARD_SIZE-1);
-//     bool maxLRCorner = board->get(maximizer, BOARD_SIZE-1, BOARD_SIZE-1);
-
-//     bool minULCorner = board->get(minimizer, 0, 0);
-//     bool minURCorner = board->get(minimizer, BOARD_SIZE-1, 0);
-//     bool minLLCorner = board->get(minimizer, 0, BOARD_SIZE-1);
-//     bool minLRCorner = board->get(minimizer, BOARD_SIZE-1, BOARD_SIZE-1);
-
-//     if (maxULCorner || maxURCorner || maxLLCorner || maxLRCorner) {
-//         score += CORNER_WEIGHT * (board->boolToInt(maxULCorner) + board->boolToInt(maxURCorner) 
-//                                 + board->boolToInt(maxLLCorner) + board->boolToInt(maxLRCorner));
-//     }
-//     if (minULCorner || minURCorner || minLLCorner || minLRCorner) {
-//         score -= CORNER_WEIGHT * (board->boolToInt(minULCorner) + board->boolToInt(minURCorner) 
-//                                 + board->boolToInt(minLLCorner) + board->boolToInt(minLRCorner));
-//     }
-
-//     // update score using a negative weight for positions in the diagonal that are
-//     // next to unoccupied corners
-//     bool maxULDiagonal = board->get(maximizer, 1, 1);
-//     bool maxURDiagonal = board->get(maximizer, BOARD_SIZE-2, 1);
-//     bool maxLLDiagonal = board->get(maximizer, 1, BOARD_SIZE-2);
-//     bool maxLRDiagonal = board->get(maximizer, BOARD_SIZE-2, BOARD_SIZE-2);
-
-//     if (maxULDiagonal && !minULCorner) {
-//         score += DIAGONAL_WEIGHT;
-//     }
-//     if (maxURDiagonal && !minURCorner) {
-//         score += DIAGONAL_WEIGHT;
-//     }
-//     if (maxLLDiagonal && !minLLCorner) {
-//         score += DIAGONAL_WEIGHT;
-//     }
-//     if (maxLRDiagonal && !minLRCorner) {
-//         score += DIAGONAL_WEIGHT;
-//     }
-
-//     // update score using a positive weight for occupied edge positions (edge
-//     // positions do not include the corners)
-//     for (int x = 0; x < BOARD_SIZE; x += BOARD_SIZE-1) {
-//         for (int y = 1; y < BOARD_SIZE-1; y++) {
-//             score += EDGE_WEIGHT * board->boolToInt(board->get(maximizer, x, y));
-//         }
-//     }
-//     for (int y = 0; y < BOARD_SIZE; y += BOARD_SIZE-1) {
-//         for (int x = 1; x < BOARD_SIZE-1; x++) {
-//             score += EDGE_WEIGHT * board->boolToInt(board->get(maximizer, x, y));
-//         }
-//     }
-
-//     int *maximizerMovesScore;
-//     int *minimizerMovesScore;
-//     int *frontierScore;
-//     maximizerMovesScore = (int *) malloc(sizeof(int));
-//     minimizerMovesScore = (int *) malloc(sizeof(int));
-//     frontierScore = (int *) malloc(sizeof(int));
-//     *maximizerMovesScore = 0;
-//     *minimizerMovesScore = 0;
-//     *frontierScore = 0;
-
-//     cudaCountMovesKernel<<<8, 64>>>(board, maximizer, maximizerMovesScore);
-//     cudaCountMovesKernel<<<8, 64>>>(board, minimizer, minimizerMovesScore);
-//     cudaGetFrontierScore<<<8, 64>>>(board, maximizer, frontierScore);
-
-//     score += MOVES_WEIGHT * (*maximizerMovesScore - *minimizerMovesScore);
-//     score += FRONTIER_WEIGHT * (*frontierScore);
-
-//     return score;
-//  }
-
 __global__ 
-void cudaSearchKernel(char *black, char *taken, int alpha, int beta, Side side, Side maximizer, int *value, int depth) {
+void cudaSearchKernel(char *black, char *taken, int *alpha, int *beta, Side side, Side maximizer, int depth) {
     if (depth == 0) {
-        *value = getScore(black, taken, maximizer);
+        *alpha = getScore(black, taken, maximizer);
+        *beta = *alpha;
         return;
     }
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
@@ -518,8 +297,7 @@ void cudaSearchKernel(char *black, char *taken, int alpha, int beta, Side side, 
         int x = index % BOARD_SIZE;
         int y = index / BOARD_SIZE;
         Side oppositeSide = side == BLACK ? WHITE : BLACK;
-        Move move(x, y);
-        if (checkMove(black, taken, &move, oppositeSide)) {
+        if (checkMove(black, taken, x, y, oppositeSide)) {
             char *new_black;
             char *new_taken;
 
@@ -530,27 +308,29 @@ void cudaSearchKernel(char *black, char *taken, int alpha, int beta, Side side, 
                 new_black[i] = black[i];
                 new_taken[i] = taken[i];
             }
-            doMove(new_black, new_taken, &move, oppositeSide);
+            doMove(new_black, new_taken, x, y, oppositeSide);
 
-            int *child_value = (int *) malloc(sizeof(int));
-            *child_value = 0;
+            int *new_alpha = (int *) malloc(sizeof(int));
+            int *new_beta = (int *) malloc(sizeof(int));
+            *new_alpha = *alpha;
+            *new_beta = *beta;
 
             // search child
-            cudaSearchKernel<<<1, 32>>>(new_black, new_taken, alpha, beta, oppositeSide, maximizer, child_value, depth - 1);
+            cudaSearchKernel<<<1, 32>>>(new_black, new_taken, new_alpha, new_beta, oppositeSide, maximizer, depth - 1);
+            cudaDeviceSynchronize();
 
             if (side == maximizer) {
-                beta = min(beta, *child_value);
-                *value = beta;
+                atomicMin(beta, *new_alpha);
             } else {
-                alpha = max(alpha, *child_value);
-                *value = alpha;
+                atomicMax(alpha, *new_beta);
             }
 
-            free(child_value);
+            free(new_alpha);
+            free(new_beta);
             free(new_black);
             free(new_taken);
 
-            if (alpha >= beta) {
+            if (*alpha >= *beta) {
                 return;
             }
         }
@@ -576,18 +356,26 @@ void cudaTreeKernel(Move *moves, char *black, char *taken, int *values, Side sid
             new_black[i] = black[i];
             new_taken[i] = taken[i];
         }
-        doMove(new_black, new_taken, move, side);
+        doMove(new_black, new_taken, move->getX(), move->getY(), side);
 
-        int *value = (int *) malloc(sizeof(int));
-        *value = 0;
+        int *new_alpha = (int *) malloc(sizeof(int));
+        int *new_beta = (int *) malloc(sizeof(int));
+        *new_alpha = alpha;
+        *new_beta = beta;
 
-        cudaSearchKernel<<<1, 32>>>(new_black, new_taken, alpha, beta, side, maximizer, value, depth);
+        cudaSearchKernel<<<1, 32>>>(new_black, new_taken, new_alpha, new_beta, side, maximizer, depth);
+        cudaDeviceSynchronize();
 
         // update the values we care about - if the parent node is a maximizing node, 
         // it cares about the child alpha values
-        values[blockIdx.x] = *value;
+        if (side == maximizer) {
+            values[blockIdx.x] = *new_beta;
+        } else {
+            values[blockIdx.x] = *new_alpha;
+        }
 
-        free(value);
+        free(new_alpha);
+        free(new_beta);
         free(new_black);
         free(new_taken);
     }
