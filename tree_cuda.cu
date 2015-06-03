@@ -24,10 +24,10 @@ void cudaCountMovesKernel(DeviceBoard *board, Side maximizer, Side minimizer,
         maximizerSum += board->checkMove(&move, maximizer);
         minimizerSum += board->checkMove(&move, minimizer);
 
-        // delete move;
         index += blockDim.x * gridDim.x;
     }
 
+    // warp shuffle reduction
     maximizerSum = warpReduceSum(maximizerSum);
     minimizerSum = warpReduceSum(minimizerSum);
     if (threadIdx.x == 0) {
@@ -109,28 +109,6 @@ void cudaGetFrontierScore(DeviceBoard *board, Side maximizer, int *score) {
 __device__
 int cudaGetScore(DeviceBoard *board, Side maximizer) {
     Side minimizer = maximizer == BLACK ? WHITE : BLACK;
-    
-    int *maximizerMovesScore;
-    int *minimizerMovesScore;
-    int *frontierScore;
-    maximizerMovesScore = (int *) malloc(sizeof(int));
-    minimizerMovesScore = (int *) malloc(sizeof(int));
-    frontierScore = (int *) malloc(sizeof(int));
-    *maximizerMovesScore = 0;
-    *minimizerMovesScore = 0;
-    *frontierScore = 0;
-
-    cudaStream_t s1;
-    cudaStream_t s2;
-    cudaStreamCreateWithFlags(&s1, cudaStreamNonBlocking);
-    cudaStreamCreateWithFlags(&s2, cudaStreamNonBlocking);
-
-    cudaCountMovesKernel<<<1, 32, 0, s1>>>(board, maximizer, minimizer, maximizerMovesScore, minimizerMovesScore);
-    cudaGetFrontierScore<<<1, 32, 0, s2>>>(board, maximizer, frontierScore);
-    
-    cudaDeviceSynchronize();
-    cudaStreamDestroy(s1);
-    cudaStreamDestroy(s2);
 
     int score;
 
@@ -194,9 +172,31 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
         }
     }
 
+    int *maximizerMovesScore;
+    int *minimizerMovesScore;
+    int *frontierScore;
+    maximizerMovesScore = (int *) malloc(sizeof(int));
+    minimizerMovesScore = (int *) malloc(sizeof(int));
+    frontierScore = (int *) malloc(sizeof(int));
+    *maximizerMovesScore = 0;
+    *minimizerMovesScore = 0;
+    *frontierScore = 0;
+
+    cudaStream_t s1;
+    cudaStream_t s2;
+    cudaStreamCreateWithFlags(&s1, cudaStreamNonBlocking);
+    cudaStreamCreateWithFlags(&s2, cudaStreamNonBlocking);
+
+    cudaCountMovesKernel<<<1, 32, 0, s1>>>(board, maximizer, minimizer, maximizerMovesScore, minimizerMovesScore);
+    cudaGetFrontierScore<<<1, 32, 0, s2>>>(board, maximizer, frontierScore);
+    
+    cudaDeviceSynchronize();
+
     score += MOVES_WEIGHT * (*maximizerMovesScore - *minimizerMovesScore);
     score += FRONTIER_WEIGHT * (*frontierScore);
 
+    cudaStreamDestroy(s1);
+    cudaStreamDestroy(s2);
     free(maximizerMovesScore);
     free(minimizerMovesScore);
     free(frontierScore);
