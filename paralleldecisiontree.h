@@ -25,7 +25,6 @@ public:
     ParallelDecisionTree(Board *board, Side side);
 	~ParallelDecisionTree();
 
-	DeviceBoard *HostToDeviceBoard(Board *board);
 	Move *search(Node *startingNode, int depth);
 	Node *getRoot();
 };

@@ -7,7 +7,7 @@
 #define CUDA_CALLABLE_MEMBER
 #endif
 
-#define BOARD_SIZE 16
+#define BOARD_SIZE 32
 #define DEPTH 2
 
 enum Side { 
