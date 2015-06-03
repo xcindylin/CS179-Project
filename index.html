@@ -17,9 +17,9 @@
       <a href="https://github.com/xcindylin/CS179-Project/zipball/master" class="btn">Download .zip</a>
       <a href="https://github.com/xcindylin/CS179-Project/tarball/master" class="btn">Download .tar.gz</a>
       <h3>Quick Navigation:</h3>
-      <a href="#intro" class="btn">Intro</a>
       <a href="#summary" class="btn">Summary</a>
       <a href="#background" class="btn">Background</a>
+      <a href="#approach" class="btn">Approach</a>
       <a href="#gpu-speedup" class="btn">GPU Speedup</a>
     </section>
 
@@ -35,6 +35,34 @@
       <p>Games like Othello, Chess, and Go have not yet been solved due to their high complexity, and in addition most decision trees used to play these games cannot search to very high depths because of the games’ high branching factors. The <a href="http://en.wikipedia.org/wiki/Minimax">minimax algorithm</a>, which generates a complete decision tree down to a specified depth, is an example of one such algorithm. <a href="http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">Alpha-beta pruning</a> is a technique built on top of minimax that is used to minimize the number of branches to be searched by determining which branches will have no effect on the outcome anyway, and “pruning” these away. Even with alpha-beta pruning, though, search depths are still very limited, as the time needed to run the algorithm increases by approximately one order of magnitude for every 1-level increase in depth. Thus, we thought that it might be interesting to see if we could parallelize the algorithm to make it run faster. Because the decision tree generated is huge and has many nodes to search through, dividing up the work between multiple threads seemed like a promising way to speed up the computation.</p>
 
       <p>However, there are aspects to alpha-beta pruning that pose particular challenges to parallelization on the GPU. The search is performed depth-first, and results from earlier branches are used to determine whether later ones should be examined or not. Parallelizing necessarily sacrifices some of this information, since if we want to search multiple branches in parallel those branches don’t have the bounds from each other to work with. Because of this, we may actually end up searching branches that would’ve been pruned in the serialized version. In theory, a thread searching one branch could update the other threads with its bounds when it finishes, but in practice this is difficult to implement on the GPU as it would require blocks to be able to break other blocks out of recursive function calls.</p>
+
+      <h6 align="right"><a href="#top">Back to Top</a></h6>
+
+      <h2>
+      <a id="approach" class="anchor" href="#approach" aria-hidden="true"><span class="octicon octicon-link"></span></a>Approach</h2>
+      <p>In spite of the aforementioned difficulties, we decided to attempt to parallelize and optimize the alpha-beta pruning algorithm because we were curious to see whether it would still be faster than the serialized version, and if so, by how much. Although this isn’t likely to be a massively parallelizable application (such as matrix transpose, for instance) we thought it would still be interesting to see what kind of performance improvements we could make. We first implemented the standard serialized alpha-beta pruning algorithm (built on top of a basic Othello board implementation from CS 2), along with a heuristic function for scoring a board state based on total number of pieces, mobility (number of moves we can make, number of moves our opponent can make), board weights (positions such as the corners and edges are desirable), and “frontier” pieces, which are particularly vulnerable to capture. For example, here’s the function used to count the number of moves for a given side and current board state:</p>
+
+      <pre><code>
+      int Board::countMoves(Side side) {
+          int count = 0;
+          for (int i = 0; i < BOARD_SIZE; i++) {
+              for (int j = 0; j < BOARD_SIZE; j++) {
+                  Move move(i, j);
+                  if (checkMove(&move, side)) count++;
+              }
+          }
+          return count;
+      }
+      </code></pre>
+
+      <p>We then moved on to parallelizing the algorithm. The first thing we had to decide was how to parallelize the depth-first search of the decision tree. We chose to start with the PV-split algorithm, and then optimize on top of it.</p>
+
+      <img src="PVSplit.png">
+
+      <p>The PV-split algorithm works by first searching down one branch of the tree on the CPU, and then parallelizing the remaining nodes to be searched on the GPU. This allows the GPU branches to use the bounds from the first CPU-searched branch. Our first attempt to get a working parallel algorithm involved using one block of threads per child node, and then searching down the subtree rooted at that child node with the block. The results from this are summarized in the chart and graph below.</p>
+
+      <img src="Table1.png">
+      <img src="Graph1.png">
 
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
