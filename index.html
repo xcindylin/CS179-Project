@@ -60,9 +60,11 @@
       }
       </code></pre>
 
-      <p>We then moved on to parallelizing the algorithm. The first thing we had to decide was how to parallelize the depth-first search of the decision tree. We chose to start with the PV-split algorithm, and then optimize on top of it (please see the <a href="https://github.com/xcindylin/CS179-Project">master</a> branch of our Github repo).</p>
+      <p>We then moved on to parallelizing the algorithm. The first thing we had to decide was how to parallelize the depth-first search of the decision tree. We chose to start with the PV-split algorithm, and then optimize on top of it.</p>
 
       <img src="PVSplit.png">
+
+      <p>Please see the <a href="https://github.com/xcindylin/CS179-Project">master</a> branch of our Github repo.</p>
 
       <p>The PV-split algorithm works by first searching down one branch of the tree on the CPU, and then parallelizing the remaining nodes to be searched on the GPU. This allows the GPU branches to use the bounds from the first CPU-searched branch. Our first attempt to get a working parallel algorithm involved using one block of threads per child node, and then searching down the subtree rooted at that child node with the block. The results from this are summarized in the chart (Table 1) and graph (Figure 2) below.</p>
 
@@ -70,7 +72,7 @@
       <br>
       <img src="Graph1.png">
 
-      <p>We see an increase in performance as the board grows larger, since with a more complex board the GPU is able to gain more of an advantage over the CPU because there is more work to be done. The dropoff in performance as the depth increases is likely due to the fact that at each level of the tree, all of the nodes (except the one explored by the CPU) have their subtrees explored by only one block of threads. Thus, as the depth increases, we have GPU threads searching increasingly larger subtrees - even though there may be many threads searching in parallel, each one has to search a subtree serially. We will actually address this issue in one of our later optimizations.</p>
+      <p>We see an increase in performance as the board grows larger, since with a more complex board the GPU is able to gain more of an advantage over the CPU because there is more work to be done. The drop off in performance as the depth increases is likely due to the fact that at each level of the tree, all of the nodes (except the one explored by the CPU) have their subtrees explored by only one block of threads. Thus, as the depth increases, we have GPU threads searching increasingly larger subtrees - even though there may be many threads searching in parallel, each one has to search a subtree serially. We will actually address this issue in one of our later optimizations.</p>
 
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
@@ -106,9 +108,9 @@
       }
       </code></pre>
 
-      <p>In each kernel, we use <a href="http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/">warp shuffle</a> reduction instead of atomicAdd to reduce the serialization of multiple threads adding to the global score variable. Additionally, to minimize the overhead of calling multiple kernels, we wrote the cudaCountMovesKernel kernel shown above to calculate the number of moves for both the maximizer and minimizer with one kernel call.</p>
+      <p>In each kernel, we use <a href="http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/">warp shuffle</a> reduction instead of atomicAdd to reduce the serialization of multiple threads adding to the global score variable. Additionally, to minimize the overhead of calling multiple kernels, we later rewrote the cudaCountMovesKernel kernel shown above to calculate the number of moves for both the maximizer and minimizer with one kernel call.</p>
 
-      <p>We launch our kernels with 1 block of 32 threads to reduce the use of the thread block scheduler of the GPU, which would reduce performance. Finally, to ensure that our kernels run concurrently, we launch our kernels into separate streams. However, actual concurrency of the kernels is not guaranteed [2]. Despite these uncertainties, we were able to see noticeable differences between the GPU speedup factor when using dynamic programming and our naive approach. Specifically, for larger boards and higher depths, dynamic parallelism results in a large speedup in comparison to the naive implementation. This behavior is to be expected since for larger boards / higher depths, we are able to hide the overhead of calling the kernels more since there are more positions on the game board for which to parallelize the computation of the score. The results from dynamic parallelism of the scoring are summarized in the chart (Table 2) and graph (Figure 3) below.</p>
+      <p>We launch our kernels with 1 block of 32 threads to reduce the use of the thread block scheduler of the GPU, which would reduce performance and to maximize the work done. Finally, to ensure that our kernels run concurrently, we launch our kernels into separate streams. However, actual concurrency of the kernels is not guaranteed [2]. Despite these uncertainties, we were able to see noticeable differences between the GPU speedup factor when using dynamic programming and our naive approach. Specifically, for larger boards and higher depths, dynamic parallelism results in a large speedup in comparison to the naive implementation. This behavior is to be expected since for larger boards / higher depths, we are able to hide the overhead of calling the kernels more since there are more positions on the game board for which to parallelize the computation of the score. The results from dynamic parallelism of the scoring are summarized in the chart (Table 2) and graph (Figure 3) below.</p>
 
       <img src="Table2.png">
       <br>
@@ -117,7 +119,7 @@
       <h5>Full Dynamic Parallelism</h5>
       <p>Please see the <a href="https://github.com/xcindylin/CS179-Project/tree/fulldynamic">full dynamic</a> branch of our Github repo.</p>
 
-      <p>We also tried to fully parallelize the decision tree search by using dynamic parallelism to launch a new kernel for each node to be searched, instead of using one block to fully search a subtree. This involved replacing the recursive __device__ search function with a recursive __global__ function and unwrapping some of our classes, but the overall structure remained the same as in the naive parallelized algorithm - the CPU would search one branch of the tree, and using the bounds obtained the GPU would search the remaining nodes in parallel. The possible tradeoff of this approach is the overhead of launching so many kernels, since the naive version there are much fewer kernel calls, but this should provide speedups at higher depths because of the aforementioned issue of GPU threads having to search entire subtrees.</p>
+      <p>We also tried to fully parallelize the decision tree search by using dynamic parallelism to launch a new kernel for each node to be searched, instead of using one block to fully search a subtree. This involved replacing the recursive __device__ search function with a recursive __global__ function and unwrapping some of our classes, but the overall structure remained the same as in the naive algorithm - the CPU would search one branch of the tree, and using the bounds obtained the GPU would search the remaining nodes in parallel. The possible tradeoff of this approach is the overhead of launching so many kernels, since the naive version has much fewer kernel calls, but this should provide speedups at higher depths because of the aforementioned issue of GPU threads having to search entire subtrees.</p>
 
       <p>We found that the fully parallelized approach did in fact improve performance by approximately the expected amount. For instance, on a 32x32 board, for a depth 1 tree we got:</p>
 
@@ -156,7 +158,7 @@
 
       <p>Compared to the naive approach (4.17291x speedup for depth 1 tree, 1.41801x speedup for depth 2 tree), the fully parallelized algorithm performs worse for depth 1 and better for depth 2. This seems reasonable, as for depth 1, each block of threads in the naive version only has to search one node anyway, so the fully parallelized version adds the overhead of launching a kernel for each one of these nodes. At depth 2, though, we see a performance improvement because the fully parallelized algorithm is able to parallelize searching subtrees while the naive version is still searching them serially.</p>
 
-      <p>However, this approach had some unexpected behavior which we’re still not sure how to explain. For depths 1 and 2 on a 16x16 board, the result of the game was the same as the CPU and naive GPU versions. When we tried to increase the depth to 3, though, suddenly the results became nondeterministic - for example, in one of the runs we got the following results:</p>
+      <p>However, this approach had some unexpected behavior which we are still not sure how to explain. For depths 1 and 2 on a 16x16 board, the result of the game was the same as the CPU and naive GPU versions. When we tried to increase the depth to 3, though, suddenly the results became nondeterministic - for example, in one of the runs we got the following results:</p>
 
       <pre><code>> ./testgame
       Starting CPU game...
