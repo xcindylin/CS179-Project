@@ -192,13 +192,14 @@
       Speedup factor: 1.46319
       </code></pre>
 
-      <p>We’re uncertain why this happens, as it is quite difficult to debug recursive code already, let alone on the GPU. In spite of this, though, we think that the fully parallelized algorithm is still something to consider because it does perform significantly better than the naive algorithm at higher depths (notice that on a 16x16 board, the naive algorithm was actually slower than the CPU version). One possibility would be to combine it with the parallelized scoring kernels, which could improve performance even more. Of course, optimally we would want to figure out why the behavior becomes unpredictable, but for lack of a better solution, this one is still pretty good.</p>
+      <p>We’re uncertain why this happens, as it is quite difficult to debug recursive code already, let alone on the GPU. In spite of this, though, we think that the fully parallelized algorithm is still something to consider because it does perform significantly better than the naive algorithm at higher depths (notice that on a 16x16 board at depth 3, the naive algorithm was actually slower than the CPU version). One possibility would be to combine it with the parallelized scoring kernels, which could improve performance even more. Of course, optimally we would want to figure out why the behavior becomes unpredictable, but for lack of a better solution, this one is still pretty good.</p>
 
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
       <h2>
       <a id="conclusion" class="anchor" href="#conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion</h2>
 
+      <h1>For Those Who Are Curious...</h1>
       <h2>
       <a id="players" class="anchor" href="#players" aria-hidden="true"><span class="octicon octicon-link"></span></a>Players</h2>
       <h5>ExamplePlayer</h5>
