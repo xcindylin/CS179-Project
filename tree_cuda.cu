@@ -10,25 +10,27 @@ int warpReduceSum(int val) {
 }
 
 __global__
-void cudaCountMovesKernel(DeviceBoard *board, Side side, int *score) {
+void cudaCountMovesKernel(DeviceBoard *board, Side maximizer, Side minimizer, int *score1, int *score2) {
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
-    int sum = 0;
+    int sum1 = 0;
+    int sum2 = 0;
 
     while (index < BOARD_SIZE * BOARD_SIZE) {
         int x = index % BOARD_SIZE;
         int y = index / BOARD_SIZE;
-        Move *move = new Move(x, y);
-        if (board->checkMove(move, side)) {
-            sum += 1;
-        }
+        Move move(x, y);
+        sum1 += board->checkMove(&move, maximizer);
+        sum2 += board->checkMove(&move, minimizer);
 
-        delete move;
+        // delete move;
         index += blockDim.x * gridDim.x;
     }
 
-    sum = warpReduceSum(sum);
+    sum1 = warpReduceSum(sum1);
+    sum2 = warpReduceSum(sum2);
     if (threadIdx.x == 0) {
-        *score = sum;
+        *score1 = sum1;
+        *score2 = sum2;
     }
 }
 
@@ -117,18 +119,18 @@ int cudaGetScore(DeviceBoard *board, Side maximizer) {
     *frontierScore = 0;
 
     cudaStream_t s1;
-    cudaStream_t s2;
+    // cudaStream_t s2;
     cudaStream_t s3;
     cudaStreamCreateWithFlags(&s1, cudaStreamNonBlocking);
-    cudaStreamCreateWithFlags(&s2, cudaStreamNonBlocking);
+    // cudaStreamCreateWithFlags(&s2, cudaStreamNonBlocking);
     cudaStreamCreateWithFlags(&s3, cudaStreamNonBlocking);
 
-    cudaCountMovesKernel<<<1, 32, 0, s1>>>(board, maximizer, maximizerMovesScore);
-    cudaCountMovesKernel<<<1, 32, 0, s2>>>(board, minimizer, minimizerMovesScore);
+    cudaCountMovesKernel<<<1, 32, 0, s1>>>(board, maximizer, minimizer, maximizerMovesScore, minimizerMovesScore);
+    // cudaCountMovesKernel<<<1, 32, 0, s2>>>(board, minimizer, minimizerMovesScore);
     cudaGetFrontierScore<<<1, 32, 0, s3>>>(board, maximizer, frontierScore);
     cudaDeviceSynchronize();
     cudaStreamDestroy(s1);
-    cudaStreamDestroy(s2);
+    // cudaStreamDestroy(s2);
     cudaStreamDestroy(s3);
 
     int score;
