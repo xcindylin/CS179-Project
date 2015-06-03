@@ -20,7 +20,8 @@
       <a href="#summary" class="btn">Summary</a>
       <a href="#background" class="btn">Background</a>
       <a href="#approach" class="btn">Approach</a>
-      <a href="#gpu-speedup" class="btn">GPU Speedup</a>
+      <a href="#approach" class="btn">Optimizations</a>
+      <a href="#gpu-speedup" class="btn">GPU Speedup Full Results</a>
     </section>
 
     <section class="main-content">
@@ -62,7 +63,59 @@
       <p>The PV-split algorithm works by first searching down one branch of the tree on the CPU, and then parallelizing the remaining nodes to be searched on the GPU. This allows the GPU branches to use the bounds from the first CPU-searched branch. Our first attempt to get a working parallel algorithm involved using one block of threads per child node, and then searching down the subtree rooted at that child node with the block. The results from this are summarized in the chart and graph below.</p>
 
       <img src="Table1.png">
+      <br>
       <img src="Graph1.png">
+
+      <h6 align="right"><a href="#top">Back to Top</a></h6>
+
+      <h2>
+      <a id="optimizations" class="anchor" href="#optimizations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Optimizations</h2>
+
+      <h5>Dynamic Parallelism of Scoring Game Boards</h5>
+      <p>Please see the <a href="https://github.com/xcindylin/CS179-Project/tree/dynamic">dynamic</a> branch of our Github repo.</p>
+
+      <p>One optimization we implemented was using <a href="http://devblogs.nvidia.com/parallelforall/introduction-cuda-dynamic-parallelism/">dynamic parallelism</a> for scoring the game board of a given node. We followed the approach of the serialized version with the exception of the countMoves and getFrontierScore functions which have been replaced by kernels. For example, the following shows the replacement of the countMoves function:</p>
+
+      <pre><code>
+      int DeviceBoard::countMoves(Side side) {
+          int count = 0;
+          for (int i = 0; i < BOARD_SIZE; i++) {
+              for (int j = 0; j < BOARD_SIZE; j++) {
+                  Move move(i, j);
+                  if (checkMove(&move, side)) count++;
+              }
+          }
+          return count;
+      }
+      </code></pre>
+
+      <p>by the cudaCountMovesKernel kernel:</p>
+
+      <pre><code>
+      __global__
+      void cudaCountMovesKernel(DeviceBoard *board, Side maximizer, int *maximizerScore) {
+
+          unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+          int maximizerSum = 0;
+          while (index < BOARD_SIZE * BOARD_SIZE) {
+              int x = index % BOARD_SIZE;
+              int y = index / BOARD_SIZE;
+              Move move(x, y);
+              maximizerSum += board->checkMove(&move, maximizer);
+              index += blockDim.x * gridDim.x;
+          }
+
+          // warp shuffle reduction
+          maximizerSum = warpReduceSum(maximizerSum);
+          if (threadIdx.x == 0) {
+              *maximizerScore = maximizerSum;
+          }
+      }
+      </code></pre>
+
+      <p>In each kernel, we use <a href="http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/">warp shuffle</a> reduction instead of atomicAdd to reduce the serialization of multiple threads adding to the global score variable. Additionally, to minimize the overhead of calling multiple kernels, we wrote the cudaCountMovesKernel kernel shown above to calculate the number of moves for both the maximizer and minimizer with one kernel call.</p>
+
+      <p>We launch our kernels with 1 block of 32 threads to reduce the use of the thread block scheduler of the GPU, which would reduce performance. Finally, to ensure that our kernels run concurrently, we launch our kernels into separate streams. However, actual concurrency of the kernels is not guaranteed [2]. Despite these uncertainties, we were able to see noticeable differences between the GPU speedup factor when using dynamic programming and our naive approach. Specifically, for larger boards and higher depths, dynamic parallelism results in a large speedup in comparison to the naive implementation. This behavior is to be expected since for larger boards / higher depths, we are able to hide the overhead of calling the kernels more since there are more positions on the game board for which to parallelize the computation of the score. The results from dynamic parallelism of the scoring are summarized in the chart and graph below.</p>
 
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
@@ -276,10 +329,6 @@
       GPU time: 174815 milliseconds
       Speedup factor: 4.50948
       </code></pre>
-
-      <img src="Table.png">
-      <br>
-      <img src="Graph.png">
 
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
