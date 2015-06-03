@@ -21,6 +21,7 @@
       <a href="#background" class="btn">Background</a>
       <a href="#approach" class="btn">Approach</a>
       <a href="#optimizations" class="btn">Optimizations</a>
+      <a href="#conclusion" class="btn">Conclusion</a>
       <h3>Archive of Full Results:</h3>
       <a href="#players" class="btn">Players</a>
       <a href="#gpu-speedup" class="btn">Naive GPU</a>
@@ -69,10 +70,14 @@
       <br>
       <img src="Graph1.png">
 
+      <p>We see an increase in performance as the board grows larger, since with a more complex board the GPU is able to gain more of an advantage over the CPU because there is more work to be done. The dropoff in performance as the depth increases is likely due to the fact that at each level of the tree, all of the nodes (except the one explored by the CPU) have their subtrees explored by only one block of threads. Thus, as the depth increases, we have GPU threads searching increasingly larger subtrees - even though there may be many threads searching in parallel, each one has to search a subtree serially. We will actually address this issue in one of our later optimizations.</p>
+
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
       <h2>
       <a id="optimizations" class="anchor" href="#optimizations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Optimizations</h2>
+
+      <p>Obviously, there were still many aspects of our naive parallel alpha-beta pruning algorithm that could potentially be further parallelized. Here are some things that we tried.</p>
 
       <h5>Dynamic Parallelism of Scoring Game Boards</h5>
       <p>Please see the <a href="https://github.com/xcindylin/CS179-Project/tree/dynamic">dynamic</a> branch of our Github repo.</p>
@@ -109,7 +114,90 @@
       <br>
       <img src="Graph2.png">
 
+      <h5>Full Dynamic Parallelism</h5>
+      <p>Please see the <a href="https://github.com/xcindylin/CS179-Project/tree/fulldynamic">full dynamic</a> branch of our Github repo.</p>
+
+      <p>We also tried to fully parallelize the decision tree search by using dynamic parallelism to launch a new kernel for each node to be searched, instead of using one block to fully search a subtree. This involved replacing the recursive __device__ search function with a recursive __global__ function and unwrapping some of our classes, but the overall structure remained the same as in the naive parallelized algorithm - the CPU would search one branch of the tree, and using the bounds obtained the GPU would search the remaining nodes in parallel. The possible tradeoff of this approach is the overhead of launching so many kernels, since the naive version there are much fewer kernel calls, but this should provide speedups at higher depths because of the aforementioned issue of GPU threads having to search entire subtrees.</p>
+
+      <p>We found that the fully parallelized approach did in fact improve performance by approximately the expected amount. For instance, on a 32x32 board, for a depth 1 tree we got:</p>
+
+      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 586
+      White score: 438
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 586
+      White score: 438
+
+      CPU time: 25287.4 milliseconds
+      GPU time: 9014.88 milliseconds
+      Speedup factor: 2.80507
+      </code></pre>
+
+      <p>while for a depth 2 tree on the 32x32 board we got:</p>
+      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 842
+      White score: 182
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 842
+      White score: 182
+
+      CPU time: 256678 milliseconds
+      GPU time: 88172.8 milliseconds
+      Speedup factor: 2.91109
+      </code></pre>
+
+      <p>Compared to the naive approach (4.17291x speedup for depth 1 tree, 1.41801x speedup for depth 2 tree), the fully parallelized algorithm performs worse for depth 1 and better for depth 2. This seems reasonable, as for depth 1, each block of threads in the naive version only has to search one node anyway, so the fully parallelized version adds the overhead of launching a kernel for each one of these nodes. At depth 2, though, we see a performance improvement because the fully parallelized algorithm is able to parallelize searching subtrees while the naive version is still searching them serially.</p>
+
+      <p>However, this approach had some unexpected behavior which we’re still not sure how to explain. For depths 1 and 2 on a 16x16 board, the result of the game was the same as the CPU and naive GPU versions. When we tried to increase the depth to 3, though, suddenly the results became nondeterministic - for example, in one of the runs we got the following results:</p>
+
+      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 202
+      White score: 54
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 177
+      White score: 79
+
+      CPU time: 52733.2 milliseconds
+      GPU time: 30744 milliseconds
+      Speedup factor: 1.71524
+      </code></pre>
+
+      <p>and in another we got these:</p>
+
+      <pre><code>[xlin@mx:~/CS179-Project]> ./testgame
+      Starting CPU game...
+      CPU Game completed.
+      Black score: 202
+      White score: 54
+
+      Starting GPU game...
+      GPU Game completed.
+      Black score: 172
+      White score: 84
+
+      CPU time: 52623.9 milliseconds
+      GPU time: 35965.2 milliseconds
+      Speedup factor: 1.46319
+      </code></pre>
+
+      <p>We’re uncertain why this happens, as it is quite difficult to debug recursive code already, let alone on the GPU. In spite of this, though, we think that the fully parallelized algorithm is still something to consider because it does perform significantly better than the naive algorithm at higher depths (notice that on a 16x16 board, the naive algorithm was actually slower than the CPU version). One possibility would be to combine it with the parallelized scoring kernels, which could improve performance even more. Of course, optimally we would want to figure out why the behavior becomes unpredictable, but for lack of a better solution, this one is still pretty good.</p>
+
       <h6 align="right"><a href="#top">Back to Top</a></h6>
+
+      <h2>
+      <a id="conclusion" class="anchor" href="#conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion</h2>
 
       <h2>
       <a id="players" class="anchor" href="#players" aria-hidden="true"><span class="octicon octicon-link"></span></a>Players</h2>
@@ -398,7 +486,7 @@
 
       GPU time: 78667.8 milliseconds
       </code></pre>
-      
+
       <h6 align="right"><a href="#top">Back to Top</a></h6>
 
       <h2>
