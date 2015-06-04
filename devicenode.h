@@ -21,7 +21,6 @@ private:
 	Move *move;
 	Side side; // the side that made the move leading to this node
 	Side maximizer; // our side - maximizing side
-	int score;
 	int alpha;
 	int beta;
 	DeviceNode *parent;
@@ -35,7 +34,6 @@ public:
 	CUDA_CALLABLE_MEMBER Side getSide();
 	CUDA_CALLABLE_MEMBER DeviceNode *getParent();
 	CUDA_CALLABLE_MEMBER void setParent(DeviceNode *node);
-	CUDA_CALLABLE_MEMBER int getScore();
 	CUDA_CALLABLE_MEMBER int getAlpha();
 	CUDA_CALLABLE_MEMBER int getBeta();
 	CUDA_CALLABLE_MEMBER void setAlpha(int alpha);

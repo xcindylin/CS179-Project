@@ -36,8 +36,8 @@ Move *DecisionTree::findBestMove(int depth) {
 
 void DecisionTree::search(Node *startingNode, int depth) {
     if (depth == 0) {
-        startingNode->setAlpha(startingNode->getScore());
-        startingNode->setBeta(startingNode->getScore());
+        startingNode->setAlpha(startingNode->getBoard()->getScore(maximizer));
+        startingNode->setBeta(startingNode->getBoard()->getScore(maximizer));
         return;
     }
     Board *board = startingNode->getBoard();

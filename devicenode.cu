@@ -6,7 +6,6 @@ DeviceNode::DeviceNode(Move *move, Side side, Side maximizer, DeviceBoard *board
 	this->side = side;
 	this->maximizer = maximizer;
 	this->board = board;
-	this->score = board->getScore(maximizer);
 	this->alpha = -99999999;
 	this->beta = 99999999;
 }
@@ -40,11 +39,6 @@ DeviceNode *DeviceNode::getParent() {
 CUDA_CALLABLE_MEMBER
 void DeviceNode::setParent(DeviceNode *node) {
 	parent = node;
-}
-
-CUDA_CALLABLE_MEMBER
-int DeviceNode::getScore() {
-    return score;
 }
 
 CUDA_CALLABLE_MEMBER
